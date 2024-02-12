@@ -63,7 +63,7 @@ public class SecurityConfig {
 		.authorizeHttpRequests((authorizehttpRequests) -> authorizehttpRequests.requestMatchers(HttpMethod.POST, "/login")
 		.permitAll() // allow unauthenticated access to the login end point
 		.anyRequest()
-		.permitAll()) // temporarily allow unauthenticated access to the login end point
+		.authenticated())
 		.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
 		.exceptionHandling((exceptionHandling) -> exceptionHandling.authenticationEntryPoint(exceptionHandler));
 		return http.build();
