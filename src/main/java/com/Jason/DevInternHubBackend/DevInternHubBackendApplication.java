@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import com.Jason.DevInternHubBackend.domain.AppUser;
 import com.Jason.DevInternHubBackend.domain.AppUserRepository;
@@ -20,6 +21,7 @@ import com.Jason.DevInternHubBackend.domain.Technology;
 public class DevInternHubBackendApplication implements CommandLineRunner {
 	private final CompanyRepository companyRepository;
 	private final AppUserRepository appUserRepository;
+	private final PasswordEncoder passwordEncoder;
 	@Value("${demo.adminUsername}")
 	protected String demoAdminUsername;
 	@Value("${demo.adminPassword}")
@@ -32,11 +34,15 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 	protected String demoGuestUsername;
 	@Value("${demo.guestPassword}")
 	protected String demoGuestPassword;
+	
+	
 
-	public DevInternHubBackendApplication(CompanyRepository companyRepository, AppUserRepository appUserRepository) {
+	public DevInternHubBackendApplication(CompanyRepository companyRepository, AppUserRepository appUserRepository,
+			PasswordEncoder passwordEncoder) {
 		super();
 		this.companyRepository = companyRepository;
 		this.appUserRepository = appUserRepository;
+		this.passwordEncoder = passwordEncoder;
 	}
 
 	public static void main(String[] args) {
@@ -93,9 +99,9 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 		company2.addJob(job3);
 
 		companyRepository.saveAll(Arrays.asList(company1, company2));
-		appUserRepository.save(new AppUser(demoAdminUsername, demoAdminPassword, Role.ADMIN));
-		appUserRepository.save(new AppUser(demoUserUsername, demoUserPassword, Role.USER));
-		appUserRepository.save(new AppUser(demoGuestUsername, demoGuestPassword, Role.GUEST));
+		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), Role.ADMIN));
+		appUserRepository.save(new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), Role.USER));
+		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), Role.GUEST));
 	}
 
 }
