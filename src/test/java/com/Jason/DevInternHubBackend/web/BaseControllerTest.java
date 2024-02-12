@@ -29,10 +29,27 @@ public abstract class BaseControllerTest {
 	protected ObjectMapper objectMapper; // ObjectMapper is used for parsing JSON
 	@Value("${spring.data.rest.basePath}")
 	protected String restBaseApi;
-	@Value("${test.username}")
-	protected String testUsername;
-	@Value("${test.password}")
-	protected String testPassword;
-	protected String jwtToken;
+
+	@Value("${demo.adminUsername}")
+	protected String demoAdminUsername;
+
+	@Value("${demo.adminPassword}")
+	protected String demoAdminPassword;
+
+	@Value("${demo.userUsername}")
+	protected String demoUserUsername;
+
+	@Value("${demo.userPassword}")
+	protected String demoUserPassword;
+
+	@Value("${demo.guestUsername}")
+	protected String demoGuestUsername;
+
+	@Value("${demo.guestPassword}")
+	protected String demoGuestPassword;
+
+	protected String adminJwtToken;
+	protected String userJwtToken;
+	protected String guestJwtToken;
 
 }

@@ -19,6 +19,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import com.Jason.DevInternHubBackend.domain.Role;
 import com.Jason.DevInternHubBackend.service.UserDetailsServiceImpl;
 
 import static org.springframework.security.config.Customizer.withDefaults;
@@ -28,13 +29,14 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 	private final UserDetailsServiceImpl userDetailsService;
 	private final AuthenticationFilter authenticationFilter;
-	private final AuthEntryPoint exceptionHandler;
+	private final AuthEntryPoint authEntryPoint;
 
 	public SecurityConfig(UserDetailsServiceImpl userDetailsService, AuthenticationFilter authenticationFilter,
-			AuthEntryPoint exceptionHandler) {
+			AuthEntryPoint authEntryPoint) {
+		super();
 		this.userDetailsService = userDetailsService;
 		this.authenticationFilter = authenticationFilter;
-		this.exceptionHandler = exceptionHandler;
+		this.authEntryPoint = authEntryPoint;
 	}
 
 	// Even if the `configureGlobal` method is removed, the application may still function normally.
@@ -54,21 +56,32 @@ public class SecurityConfig {
 	public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
 		return authConfig.getAuthenticationManager();
 	}
-	
+
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 		http.csrf((csrf) -> csrf.disable()) // disable CSRF protection since JWT inherently prevents it
-		.cors(withDefaults()) // CORS filter
-		.sessionManagement((sessionManagement) -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // disable session
-		.authorizeHttpRequests((authorizehttpRequests) -> authorizehttpRequests.requestMatchers(HttpMethod.POST, "/login")
-		.permitAll() // allow unauthenticated access to the login end point
-		.anyRequest()
-		.authenticated())
-		.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
-		.exceptionHandling((exceptionHandling) -> exceptionHandling.authenticationEntryPoint(exceptionHandler));
+				.cors(withDefaults()) // CORS filter
+				.sessionManagement(
+						(sessionManagement) -> sessionManagement.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // disable
+																															// session
+				.authorizeHttpRequests((authorizehttpRequests) -> authorizehttpRequests
+						.requestMatchers(HttpMethod.POST, "/login")
+						.permitAll() // allow unauthenticated access to the login end point
+						.requestMatchers(HttpMethod.GET, "/**")
+						.permitAll()
+						.requestMatchers(HttpMethod.POST, "/**")
+						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
+						.requestMatchers(HttpMethod.PUT, "/**")
+						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
+						.requestMatchers(HttpMethod.DELETE, "/**")
+						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
+						.requestMatchers(HttpMethod.PATCH, "/**")
+						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString()))
+				.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+				.exceptionHandling((exceptionHandling) -> exceptionHandling.authenticationEntryPoint(authEntryPoint));
 		return http.build();
 	}
-	
+
 	// Add Global CORS filter inside the class
 	@Bean
 	public CorsConfigurationSource corsConfigurationSource() {

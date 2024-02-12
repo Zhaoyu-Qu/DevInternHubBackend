@@ -4,10 +4,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.Jason.DevInternHubBackend.service.JwtService;
+import com.Jason.DevInternHubBackend.service.UserDetailsServiceImpl;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -17,9 +19,12 @@ import jakarta.servlet.http.HttpServletResponse;
 @Component
 public class AuthenticationFilter extends OncePerRequestFilter {
 	private final JwtService jwtService;
+	private final UserDetailsServiceImpl userDetailsServiceImpl;
 
-	public AuthenticationFilter(JwtService jwtService) {
+	public AuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsServiceImpl) {
+		super();
 		this.jwtService = jwtService;
+		this.userDetailsServiceImpl = userDetailsServiceImpl;
 	}
 
 	@Override
@@ -29,10 +34,11 @@ public class AuthenticationFilter extends OncePerRequestFilter {
 		String jws = request.getHeader(HttpHeaders.AUTHORIZATION);
 		if (jws != null) {
 			// Verify token and get user
-			String user = jwtService.getAuthUser(request);
+			String username = jwtService.getAuthUser(request);
+			UserDetails userDetails = userDetailsServiceImpl.loadUserByUsername(username);
 			// Authenticate
-			Authentication authentication = new UsernamePasswordAuthenticationToken(user, null,
-					java.util.Collections.emptyList());
+			Authentication authentication = new UsernamePasswordAuthenticationToken(username, null,
+					userDetails.getAuthorities());
 			SecurityContextHolder.getContext().setAuthentication(authentication);
 		}
 		filterChain.doFilter(request, response);

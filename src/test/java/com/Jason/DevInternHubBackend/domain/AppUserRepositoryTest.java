@@ -4,9 +4,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.repository.CrudRepository;
 
-@DataJpaTest
+@SpringBootTest
 public class AppUserRepositoryTest extends BaseRepositoryTest<AppUser, Long> {
 	@Override
 	public CrudRepository<AppUser, Long> getRepository() {
