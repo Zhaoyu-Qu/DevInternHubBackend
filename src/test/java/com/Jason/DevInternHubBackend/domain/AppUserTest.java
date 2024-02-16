@@ -49,4 +49,36 @@ public class AppUserTest extends BaseTest {
 		});
 		assertTrue(sam.getRole().equals(Role.GUEST));
 	}
+	
+	@Test
+	public void testOwnedJobs() {
+		// test adding owned job for the first time
+		assertTrue(sam.getOwnedJobs().size() == 0);
+		assertTrue(backendJob.getOwner() == null);
+		sam.addOwnedJob(backendJob);
+		assertTrue(sam.getOwnedJobs().size() == 1);
+		assertTrue(sam.getOwnedJobs().contains(backendJob));
+		assertTrue(backendJob.getOwner().equals(sam));
+		
+		// test idempotency
+		sam.addOwnedJob(backendJob);
+		assertTrue(sam.getOwnedJobs().size() == 1);
+		assertTrue(sam.getOwnedJobs().contains(backendJob));
+		assertTrue(backendJob.getOwner().equals(sam));
+		
+		// test adding a second owned job
+		sam.addOwnedJob(frontendJob);
+		assertTrue(sam.getOwnedJobs().size() == 2);
+		assertTrue(sam.getOwnedJobs().contains(backendJob));
+		assertTrue(sam.getOwnedJobs().contains(frontendJob));
+		assertTrue(backendJob.getOwner().equals(sam));
+		assertTrue(frontendJob.getOwner().equals(sam));
+		
+		// test changing ownership
+		jack.addOwnedJob(frontendJob);
+		assertTrue(sam.getOwnedJobs().size() == 1);
+		assertTrue(jack.getOwnedJobs().size() == 1);
+		assertTrue(frontendJob.getOwner().equals(jack));
+		
+	}
 }

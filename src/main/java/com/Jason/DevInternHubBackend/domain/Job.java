@@ -55,10 +55,10 @@ public class Job implements DatabaseEntity {
 
 	public void setOwner(AppUser owner) {
 		if (this.owner != null) {
-			this.owner.getJobs().remove(this);
+			this.owner.getOwnedJobs().remove(this);
 		}
 		this.owner = owner;
-		owner.addJob(this);
+		owner.addOwnedJob(this);
 	}
 
 	public void addTechnology(Technology technology) {

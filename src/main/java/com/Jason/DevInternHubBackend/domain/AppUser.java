@@ -32,10 +32,10 @@ public class AppUser implements DatabaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING) // This tells JPA to store the enum values as strings
 	private Role role;
-	
+
 	@JsonIgnore
 	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "owner")
-	private List<Job> jobs = new ArrayList<Job>();
+	private List<Job> ownedJobs = new ArrayList<Job>();
 
 	public AppUser() {
 	}
@@ -43,7 +43,6 @@ public class AppUser implements DatabaseEntity {
 	private AppUser(String username, String password) {
 		this.username = username;
 		this.password = password;
-
 	}
 
 	public AppUser(String username, String password, String role) {
@@ -56,14 +55,19 @@ public class AppUser implements DatabaseEntity {
 		this.setRole(role);
 	}
 
-	public List<Job> getJobs() {
-		return jobs;
+	public List<Job> getOwnedJobs() {
+		return ownedJobs;
 	}
-	
-	public void addJob(Job job) {
-		jobs.add(job);
+
+	public void addOwnedJob(Job job) {
+		if (!this.ownedJobs.contains(job)) {
+			this.ownedJobs.add(job);
+		}
+		if (job.getOwner() == null || !job.getOwner().equals(this)) {
+			job.setOwner(this);
+		}
 	}
-	
+
 	public String getUsername() {
 		return username;
 	}
