@@ -24,6 +24,7 @@ public class Job implements DatabaseEntity {
 	private LocalDate openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
+	private boolean verificationStatus = false;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
@@ -55,6 +56,14 @@ public class Job implements DatabaseEntity {
 
 	public AppUser getOwner() {
 		return owner;
+	}
+
+	public boolean isVerificationStatus() {
+		return verificationStatus;
+	}
+
+	public void setVerificationStatus(boolean verificationStatus) {
+		this.verificationStatus = verificationStatus;
 	}
 
 	public Set<AppUser> getBookmarkHolders() {
