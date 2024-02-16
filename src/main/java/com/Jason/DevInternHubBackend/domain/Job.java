@@ -28,6 +28,10 @@ public class Job implements DatabaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
 	private Company company;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "ownerId")
+	private AppUser owner;
 
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JoinTable(name = "job_technology", joinColumns = @JoinColumn(name = "jobId"), inverseJoinColumns = @JoinColumn(name = "techId"))
@@ -43,6 +47,18 @@ public class Job implements DatabaseEntity {
 	public Job(String title, Company company) {
 		this.title = title;
 		this.company = company;
+	}
+
+	public AppUser getOwner() {
+		return owner;
+	}
+
+	public void setOwner(AppUser owner) {
+		if (this.owner != null) {
+			this.owner.getJobs().remove(this);
+		}
+		this.owner = owner;
+		owner.addJob(this);
 	}
 
 	public void addTechnology(Technology technology) {

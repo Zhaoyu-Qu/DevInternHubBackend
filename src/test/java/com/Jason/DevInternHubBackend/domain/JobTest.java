@@ -35,6 +35,35 @@ public class JobTest extends BaseTest {
 		assertTrue(microsoft.getJobs().contains(backendJob));
 		assertTrue(backendJob.getCompanyName().equals(microsoft.getCompanyName()));
 	}
+	
+	@Test
+	public void testSetOwner() {
+		// test assigning owner
+		assertTrue(backendJob.getOwner() == null);
+		assertTrue(sam.getJobs().isEmpty());
+		backendJob.setOwner(sam);
+		assertTrue(backendJob.getOwner().equals(sam));
+		assertTrue(sam.getJobs().contains(backendJob));
+		
+		// test idempotency
+		backendJob.setOwner(sam);
+		assertTrue(backendJob.getOwner().equals(sam));
+		assertTrue(sam.getJobs().contains(backendJob));
+		assertTrue(sam.getJobs().size() == 1);
+		
+		// test changing owner
+		backendJob.setOwner(jack);
+		assertFalse(sam.getJobs().contains(backendJob));
+		assertTrue(jack.getJobs().contains(backendJob));
+		assertTrue(jack.getJobs().size() == 1);
+		assertTrue(backendJob.getOwner().equals(jack));
+		
+		// test assigning owner to a second job
+		frontendJob.setOwner(jack);
+		assertTrue(jack.getJobs().size() == 2);
+		assertTrue(jack.getJobs().contains(frontendJob));
+		assertTrue(frontendJob.getOwner().equals(jack));
+	}
 
 	@Test
 	public void testCascading() {

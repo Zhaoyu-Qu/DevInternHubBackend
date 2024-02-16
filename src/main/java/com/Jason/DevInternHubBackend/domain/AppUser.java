@@ -1,12 +1,18 @@
 package com.Jason.DevInternHubBackend.domain;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 
@@ -26,6 +32,10 @@ public class AppUser implements DatabaseEntity {
 	@Column(nullable = false)
 	@Enumerated(EnumType.STRING) // This tells JPA to store the enum values as strings
 	private Role role;
+	
+	@JsonIgnore
+	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "owner")
+	private List<Job> jobs = new ArrayList<Job>();
 
 	public AppUser() {
 	}
@@ -46,6 +56,14 @@ public class AppUser implements DatabaseEntity {
 		this.setRole(role);
 	}
 
+	public List<Job> getJobs() {
+		return jobs;
+	}
+	
+	public void addJob(Job job) {
+		jobs.add(job);
+	}
+	
 	public String getUsername() {
 		return username;
 	}
