@@ -36,6 +36,10 @@ public class Job implements DatabaseEntity {
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JoinTable(name = "job_technology", joinColumns = @JoinColumn(name = "jobId"), inverseJoinColumns = @JoinColumn(name = "techId"))
 	private Set<Technology> technologies = new HashSet<>();
+	
+	@ManyToMany
+	@JoinTable(name = "job_bookmarkHolders", joinColumns = @JoinColumn(name = "jobId"), inverseJoinColumns = @JoinColumn(name = "bookmarkHolderId"))
+	private Set<AppUser> bookmarkHolders = new HashSet<>();
 
 	public Job() {
 	}
@@ -51,6 +55,24 @@ public class Job implements DatabaseEntity {
 
 	public AppUser getOwner() {
 		return owner;
+	}
+
+	public Set<AppUser> getBookmarkHolders() {
+		return bookmarkHolders;
+	}
+	
+	public void addBookmarkHolder(AppUser bookmarkHolder) {
+		this.bookmarkHolders.add(bookmarkHolder);
+		if (!bookmarkHolder.getBookmarkedJobs().contains(this)) {
+			bookmarkHolder.addBookmarkedjob(this);
+		}
+	}
+	
+	public void removedBookmarkHolder(AppUser bookmarkHolder) {
+		if (this.bookmarkHolders.contains(bookmarkHolder))
+			this.bookmarkHolders.remove(bookmarkHolder);
+		if (bookmarkHolder.getBookmarkedJobs().contains(this))
+			bookmarkHolder.removeBookmarkedJob(this);
 	}
 
 	public void setOwner(AppUser owner) {

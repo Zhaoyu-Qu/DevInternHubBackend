@@ -64,6 +64,37 @@ public class JobTest extends BaseTest {
 		assertTrue(jack.getOwnedJobs().contains(frontendJob));
 		assertTrue(frontendJob.getOwner().equals(jack));
 	}
+	
+	@Test
+	public void testAddBookmarkHolder() {
+		assertTrue(sam.getBookmarkedJobs().size() == 0);
+		assertTrue(backendJob.getBookmarkHolders().size() == 0);
+		
+		// test adding one user
+		backendJob.addBookmarkHolder(sam);
+		assertTrue(sam.getBookmarkedJobs().contains(backendJob));
+		assertTrue(backendJob.getBookmarkHolders().contains(sam));
+		
+		// test idempotency
+		backendJob.addBookmarkHolder(sam);
+		assertTrue(sam.getBookmarkedJobs().contains(backendJob));
+		assertTrue(sam.getBookmarkedJobs().size() == 1);
+		assertTrue(backendJob.getBookmarkHolders().size() == 1);
+		
+		// test adding second user
+		backendJob.addBookmarkHolder(jack);
+		assertTrue(jack.getBookmarkedJobs().contains(backendJob));
+		assertTrue(backendJob.getBookmarkHolders().contains(jack));
+		assertTrue(backendJob.getBookmarkHolders().size() == 2);
+	}
+	
+	@Test
+	public void testRemoveBookmarkHolder() {
+		backendJob.addBookmarkHolder(sam);
+		backendJob.removedBookmarkHolder(sam);
+		assertTrue(sam.getBookmarkedJobs().size() == 0);
+		assertTrue(backendJob.getBookmarkHolders().size() == 0);
+	}
 
 	@Test
 	public void testCascading() {

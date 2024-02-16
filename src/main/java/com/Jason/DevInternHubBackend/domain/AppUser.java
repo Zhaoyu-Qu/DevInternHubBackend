@@ -1,8 +1,10 @@
 package com.Jason.DevInternHubBackend.domain;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
@@ -12,6 +14,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -37,6 +40,10 @@ public class AppUser implements DatabaseEntity {
 	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "owner")
 	private List<Job> ownedJobs = new ArrayList<Job>();
 
+	@JsonIgnore
+	@ManyToMany(mappedBy = "bookmarkHolders")
+	private Set<Job> bookmarkedJobs = new HashSet<Job>();
+
 	public AppUser() {
 	}
 
@@ -53,6 +60,25 @@ public class AppUser implements DatabaseEntity {
 	public AppUser(String username, String password, Role role) {
 		this(username, password);
 		this.setRole(role);
+	}
+
+	public Set<Job> getBookmarkedJobs() {
+		return bookmarkedJobs;
+	}
+
+	public void removeBookmarkedJob(Job job) {
+		if (this.bookmarkedJobs.contains(job))
+			this.bookmarkedJobs.remove(job);
+		if (job.getBookmarkHolders().contains(this))
+			job.removedBookmarkHolder(this);
+
+	}
+
+	public void addBookmarkedjob(Job job) {
+		this.bookmarkedJobs.add(job);
+		if (!job.getBookmarkHolders().contains(this)) {
+			job.addBookmarkHolder(this);
+		}
 	}
 
 	public List<Job> getOwnedJobs() {

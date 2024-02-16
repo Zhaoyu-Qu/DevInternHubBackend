@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -51,7 +53,7 @@ public class AppUserTest extends BaseTest {
 	}
 	
 	@Test
-	public void testOwnedJobs() {
+	public void testAddOwnedJob() {
 		// test adding owned job for the first time
 		assertTrue(sam.getOwnedJobs().size() == 0);
 		assertTrue(backendJob.getOwner() == null);
@@ -80,5 +82,48 @@ public class AppUserTest extends BaseTest {
 		assertTrue(jack.getOwnedJobs().size() == 1);
 		assertTrue(frontendJob.getOwner().equals(jack));
 		
+	}
+	
+	@Test
+	public void testAddBookmarkedJob() {
+		assertTrue(sam.getBookmarkedJobs().size() == 0);
+		assertTrue(backendJob.getBookmarkHolders().size() == 0);
+		
+		// test adding a job
+		sam.addBookmarkedjob(backendJob);
+		assertTrue(sam.getBookmarkedJobs().contains(backendJob));
+		assertTrue(backendJob.getBookmarkHolders().contains(sam));
+		
+		// test idempotency
+		sam.addBookmarkedjob(backendJob);
+		assertTrue(sam.getBookmarkedJobs().contains(backendJob));
+		assertTrue(sam.getBookmarkedJobs().size() == 1);
+		assertTrue(backendJob.getBookmarkHolders().size() == 1);
+		
+		// test adding a second job
+		sam.addBookmarkedjob(frontendJob);
+		assertTrue(sam.getBookmarkedJobs().contains(frontendJob));
+		assertTrue(sam.getBookmarkedJobs().size() == 2);
+		assertTrue(backendJob.getBookmarkHolders().size() == 1);
+		assertTrue(frontendJob.getBookmarkHolders().size() == 1);
+		
+		// test different user adding same job
+		jack.addBookmarkedjob(backendJob);
+		assertTrue(sam.getBookmarkedJobs().contains(frontendJob));
+		assertTrue(jack.getBookmarkedJobs().contains(backendJob));
+		assertTrue(sam.getBookmarkedJobs().size() == 2);
+		assertTrue(jack.getBookmarkedJobs().size() == 1);
+		assertTrue(backendJob.getBookmarkHolders().size() == 2);
+		assertTrue(backendJob.getBookmarkHolders().containsAll(Arrays.asList(sam, jack)));
+		assertTrue(frontendJob.getBookmarkHolders().size() == 1);
+		assertTrue(frontendJob.getBookmarkHolders().contains(sam));
+	}
+	
+	@Test
+	public void testRemoveBookmarkedJob() {
+		sam.addBookmarkedjob(backendJob);
+		sam.removeBookmarkedJob(backendJob);
+		assertTrue(sam.getBookmarkedJobs().size() == 0);
+		assertTrue(backendJob.getBookmarkHolders().size() == 0);
 	}
 }
