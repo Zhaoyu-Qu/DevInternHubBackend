@@ -25,8 +25,6 @@ public class JobControllerTest extends EntityControllerTest {
 	void setSampleEntityPatchBodies() throws Exception {
 		for (int i = 0; i < 3; i++) {
 			sampleEntityPatchBodies.add(String.format("{\"url\":\"url%d\"}", i));
-		}
-		
+		}	
 	}
-
 }
