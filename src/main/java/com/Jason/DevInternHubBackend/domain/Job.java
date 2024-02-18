@@ -15,6 +15,8 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.springframework.security.access.annotation.Secured;
+
 @Entity
 public class Job implements DatabaseEntity {
 	@Id
@@ -24,7 +26,7 @@ public class Job implements DatabaseEntity {
 	private LocalDate openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
-	private boolean verificationStatus = false;
+	private boolean isVerified;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
@@ -57,13 +59,14 @@ public class Job implements DatabaseEntity {
 	public AppUser getOwner() {
 		return owner;
 	}
+	
 
-	public boolean isVerificationStatus() {
-		return verificationStatus;
+	public boolean isVerified() {
+		return isVerified;
 	}
 
-	public void setVerificationStatus(boolean verificationStatus) {
-		this.verificationStatus = verificationStatus;
+	public void setVerified(boolean isVerified) {
+		this.isVerified = isVerified;
 	}
 
 	public Set<AppUser> getBookmarkHolders() {
