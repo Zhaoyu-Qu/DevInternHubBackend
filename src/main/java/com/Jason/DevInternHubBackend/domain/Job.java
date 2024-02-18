@@ -55,6 +55,11 @@ public class Job implements DatabaseEntity {
 		this.title = title;
 		this.company = company;
 	}
+	
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public AppUser getOwner() {
 		return owner;

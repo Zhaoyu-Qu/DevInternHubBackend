@@ -69,14 +69,8 @@ public class SecurityConfig {
 						.permitAll() // allow unauthenticated access to the login end point
 						.requestMatchers(HttpMethod.GET, "/**")
 						.permitAll()
-						.requestMatchers(HttpMethod.POST, "/**")
-						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
-						.requestMatchers(HttpMethod.PUT, "/**")
-						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
-						.requestMatchers(HttpMethod.DELETE, "/**")
-						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString())
-						.requestMatchers(HttpMethod.PATCH, "/**")
-						.hasAnyRole(Role.ADMIN.toString(), Role.USER.toString()))
+						.anyRequest()
+						.authenticated())
 				.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.exceptionHandling((exceptionHandling) -> exceptionHandling.authenticationEntryPoint(authEntryPoint));
 		return http.build();
