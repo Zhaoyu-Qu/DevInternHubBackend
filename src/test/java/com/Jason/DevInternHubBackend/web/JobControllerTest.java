@@ -8,6 +8,7 @@ import org.springframework.test.web.servlet.MvcResult;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -189,8 +190,114 @@ public class JobControllerTest extends EntityControllerTest {
 		assertTrue(rootNode2.get("type") == null);
 		if (jwtToken.equals(adminJwtToken)) {
 			assertTrue(rootNode1.get("verified").asBoolean());
+			assertTrue(rootNode2.get("verified").asBoolean());
 		} else {
 			assertFalse(rootNode1.get("verified").asBoolean());
+			assertFalse(rootNode2.get("verified").asBoolean());
 		}
+	}
+	private void testPatchJob() throws Exception {
+		String responseString, location;
+		MvcResult mvcResult;
+		JsonNode rootNode;
+		HttpHeaders headers = new HttpHeaders();
+		String urlForPost = restBaseApi + "/" + entityNameLowerCasePlural;
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		String postBody1 = "{\n"
+				+ "  \"title\": \"title1\",\n"
+				+ "  \"description\": \"description1\",\n"
+				+ "  \"url\": \"url1\",\n"
+				+ "  \"location\": \"location1\",\n"
+				+ "  \"companyName\": \"companyName1\",\n"
+				+ "  \"openingDate\": \"2024-02-05\",\n"
+				+ "  \"closingDate\": \"2024-02-09\",\n"
+				+ "  \"specialisation\": \"specialisation1\",\n"
+				+ "  \"type\": \"Graduate Job\",\n"
+				+ "  \"technologies\": [\n"
+				+ "    {\n"
+				+ "      \"name\": \"Technology11\",\n"
+				+ "      \"name\": \"Technology12\"\n"
+				+ "    }\n"
+				+ "  ],\n"
+				+ "}";
+		
+		// test admin behavior
+		headers.setBearerAuth(adminJwtToken);
+		// save a resource first
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody1)).andExpect(status().isOk()).andReturn();
+		location = mvcResult.getResponse().getHeader("location");
+		// then, update the resource using the patch method 
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title2\",\n"
+				+ "  \"verified\": false\n"
+				+ "}"
+				)).andExpect(status().isOk());
+		// retrieve the updated resource and examine its properties
+		mvcResult = mockMvc.perform(get(location).headers(headers)).andExpect(status().isOk()).andReturn();
+		responseString = mvcResult.getResponse().getContentAsString();
+		rootNode = objectMapper.readTree(responseString);
+		assertTrue(rootNode.get("title").asText().equals("title2"));
+		assertFalse(rootNode.get("verified").asBoolean());
+		
+		// test user behaviour
+		headers.setBearerAuth(userJwtToken);
+		// a non-admin user shouldn't be able to modify others' resources
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title2\",\n"
+				+ "  \"verified\": false\n"
+				+ "}"
+				)).andExpect(status().isForbidden());
+		// create a new resource with user privilege
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody1)).andExpect(status().isOk()).andReturn();
+		location = mvcResult.getResponse().getHeader("location");
+		// make a patch request
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title3\",\n"
+				+ "  \"verified\": true\n"
+				+ "}"
+				)).andExpect(status().isOk());
+		responseString = mvcResult.getResponse().getContentAsString();
+		rootNode = objectMapper.readTree(responseString);
+		assertTrue(rootNode.get("title").asText().equals("title3"));
+		// the `verified` property in the patch request should have been ignored by the backend
+		assertFalse(rootNode.get("verified").asBoolean());
+		
+		// admin can verify a posting
+		headers.setBearerAuth(adminJwtToken);
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"verified\": true\n"
+				+ "}"
+				)).andExpect(status().isOk());
+		assertTrue(rootNode.get("verified").asBoolean());
+		
+		// test patch a non-existent resource
+		String urlForPatchNonExistentResource = restBaseApi + "/" + entityNameLowerCasePlural + "/100";
+		headers.setBearerAuth(adminJwtToken);
+		mockMvc.perform(patch(urlForPatchNonExistentResource).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title3\",\n"
+				+ "  \"verified\": true\n"
+				+ "}"
+				)).andExpect(status().isNotFound());
+		
+		// test guest user behaviour
+		headers.setBearerAuth(guestJwtToken);
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title3\",\n"
+				+ "}"
+				)).andExpect(status().isForbidden());
+		
+		headers.setBearerAuth(null);
+		mockMvc.perform(patch(location).headers(headers).content(
+				"{\n"
+				+ "  \"title\": \"title3\",\n"
+				+ "}"
+				)).andExpect(status().isForbidden());
 	}
 }

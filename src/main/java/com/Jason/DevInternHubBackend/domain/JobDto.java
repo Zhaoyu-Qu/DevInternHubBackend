@@ -9,8 +9,17 @@ public class JobDto {
 	private String openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
-	private boolean isVerified;
+	private Boolean isVerified;
 	private Set<Technology> technologies;
+	private Long id;
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
+	}
 
 	public String getTitle() {
 		return title;
@@ -84,11 +93,11 @@ public class JobDto {
 		this.type = type;
 	}
 
-	public boolean isVerified() {
+	public Boolean isVerified() {
 		return isVerified;
 	}
 
-	public void setVerified(boolean isVerified) {
+	public void setVerified(Boolean isVerified) {
 		this.isVerified = isVerified;
 	}
 
@@ -113,11 +122,12 @@ public class JobDto {
 		jobDto.setLocation(job.getLocation());
 		jobDto.setDescription(job.getDescription());
 		jobDto.setCompanyName(job.getCompanyName());
+		jobDto.setId(job.getId());
 		if (job.getClosingDate() != null)
 			jobDto.setClosingDate(job.getClosingDate().toString());
 		return jobDto;
 	}
-	
+
 	public static Job convertToJob(JobDto jobDto) {
 		Job job = new Job();
 		job.setTitle(jobDto.getTitle());
