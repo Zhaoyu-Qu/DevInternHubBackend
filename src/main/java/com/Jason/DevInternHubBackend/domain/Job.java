@@ -22,7 +22,7 @@ public class Job implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	private String title, description, url, location;
+	private String title, description, url, location, companyName;
 	private LocalDate openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
@@ -59,6 +59,10 @@ public class Job implements DatabaseEntity {
 
 	public void setId(Long id) {
 		this.id = id;
+	}
+
+	public void setCompanyName(String companyName) {
+		this.companyName = companyName;
 	}
 
 	public AppUser getOwner() {

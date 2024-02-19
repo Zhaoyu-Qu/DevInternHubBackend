@@ -5,8 +5,10 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MvcResult;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.atteo.evo.inflector.English;
@@ -86,5 +88,109 @@ public class JobControllerTest extends EntityControllerTest {
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
 		assertTrue(rootNode.get("title").asText().equals("some job"));
+	}
+	
+	@Test
+	private void testPostJob() throws Exception {
+		testPostJob(adminJwtToken);
+		testPostJob(userJwtToken);
+		testPostJob(guestJwtToken);
+		testPostJob("");
+	}
+	
+	private void testPostJob(String jwtToken) throws Exception {
+		// postBody1 has all correct inputs, except `verified` which is meant to be ignored
+		String postBody1 = "{\n"
+				+ "  \"title\": \"title1\",\n"
+				+ "  \"description\": \"description1\",\n"
+				+ "  \"url\": \"url1\",\n"
+				+ "  \"location\": \"location1\",\n"
+				+ "  \"companyName\": \"companyName1\",\n"
+				+ "  \"openingDate\": \"2024-02-05\",\n"
+				+ "  \"closingDate\": \"2024-02-09\",\n"
+				+ "  \"specialisation\": \"specialisation1\",\n"
+				+ "  \"type\": \"type1\",\n"
+				+ "  \"technologies\": [\n"
+				+ "    {\n"
+				+ "      \"name\": \"Technology11\",\n"
+				+ "      \"name\": \"Technology12\"\n"
+				+ "    }\n"
+				+ "  ],\n"
+				+ "  \"verified\": true\n"
+				+ "}";
+		// postBody2 has dates of the wrong formats and the `verified` property which is meant to be ignored
+		String postBody2 = "{\n"
+				+ "  \"title\": \"title2\",\n"
+				+ "  \"description\": \"description2\",\n"
+				+ "  \"url\": \"url2\",\n"
+				+ "  \"location\": \"location2\",\n"
+				+ "  \"companyName\": \"companyName2\",\n"
+				+ "  \"openingDate\": \"05/02/2024\",\n"
+				+ "  \"closingDate\": \"09/02/2024\",\n"
+				+ "  \"specialisation\": \"specialisation2\",\n"
+				+ "  \"type\": \"type2\",\n"
+				+ "  \"technologies\": [\n"
+				+ "    {\n"
+				+ "      \"name\": \"Technology21\",\n"
+				+ "      \"name\": \"Technology22\"\n"
+				+ "    }\n"
+				+ "  ],\n"
+				+ "  \"verified\": false\n"
+				+ "}";
+		String urlForPost = restBaseApi + "/" + entityNameLowerCasePlural;
+		String responseString1, responseString2;
+		String location1, location2;
+		MvcResult mvcResult1, mvcResult2;
+		JsonNode rootNode1, rootNode2;
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		
+		// post resources
+		if (jwtToken.length() > 0)
+			headers.setBearerAuth(jwtToken);
+		mvcResult1 = mockMvc.perform(post(urlForPost).headers(headers).content(postBody1)).andReturn();
+		mvcResult2 = mockMvc.perform(post(urlForPost).headers(headers).content(postBody2)).andReturn();
+		
+		// only ADMIN and USER may make post requests
+		if (!jwtToken.equals(adminJwtToken) && !jwtToken.equals(userJwtToken)) {
+			assertTrue(mvcResult1.getResponse().getStatus() == 401);
+			assertTrue(mvcResult2.getResponse().getStatus() == 401);
+			return;
+		}
+		
+		// retrieve the saved resources using HTTP GET
+		location1 = mvcResult1.getResponse().getHeader("location");
+		location2 = mvcResult1.getResponse().getHeader("location");
+		mvcResult1 = mockMvc.perform(get(location1).headers(headers)).andExpect(status().isOk()).andReturn();
+		mvcResult2 = mockMvc.perform(get(location2).headers(headers)).andExpect(status().isOk()).andReturn();
+		
+		// examine retrieved results
+		responseString1 = mvcResult1.getResponse().getContentAsString();
+		responseString2 = mvcResult2.getResponse().getContentAsString();
+		rootNode1 = objectMapper.readTree(responseString1);
+		rootNode2 = objectMapper.readTree(responseString2);
+		assertTrue(rootNode1.get("title").asText().equals("title1"));
+		assertTrue(rootNode2.get("title").asText().equals("title2"));
+		assertTrue(rootNode1.get("openingDate").asText().equals("2024-02-05"));
+		assertTrue(rootNode2.get("openingDate").asText() == null);
+		assertTrue(rootNode1.get("closingDate").asText().equals("2024-02-09"));
+		assertTrue(rootNode2.get("closingDate").asText() == null);
+		assertTrue(rootNode1.get("description").asText().equals("description1"));
+		assertTrue(rootNode2.get("description").asText().equals("description2"));
+		assertTrue(rootNode1.get("url").asText().equals("url1"));
+		assertTrue(rootNode2.get("url").asText().equals("url2"));
+		assertTrue(rootNode1.get("location").asText().equals("location1"));
+		assertTrue(rootNode2.get("location").asText().equals("location2"));
+		assertTrue(rootNode1.get("companyName").asText().equals("companyName1"));
+		assertTrue(rootNode2.get("companyName").asText().equals("companyName2"));
+		assertTrue(rootNode1.get("specialisation").asText().equals("specialisation1"));
+		assertTrue(rootNode2.get("specialisation").asText().equals("specialisation2"));
+		assertTrue(rootNode1.get("type").asText().equals("type1"));
+		assertTrue(rootNode2.get("type").asText().equals("type2"));
+		if (jwtToken.equals(adminJwtToken)) {
+			assertTrue(rootNode1.get("verified").asBoolean());
+		} else {
+			assertFalse(rootNode1.get("verified").asBoolean());
+		}
 	}
 }
