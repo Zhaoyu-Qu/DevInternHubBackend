@@ -109,7 +109,7 @@ public class JobControllerTest extends EntityControllerTest {
 				+ "  \"openingDate\": \"2024-02-05\",\n"
 				+ "  \"closingDate\": \"2024-02-09\",\n"
 				+ "  \"specialisation\": \"specialisation1\",\n"
-				+ "  \"type\": \"type1\",\n"
+				+ "  \"type\": \"Graduate Job\",\n"
 				+ "  \"technologies\": [\n"
 				+ "    {\n"
 				+ "      \"name\": \"Technology11\",\n"
@@ -185,8 +185,8 @@ public class JobControllerTest extends EntityControllerTest {
 		assertTrue(rootNode2.get("companyName").asText().equals("companyName2"));
 		assertTrue(rootNode1.get("specialisation").asText().equals("specialisation1"));
 		assertTrue(rootNode2.get("specialisation").asText().equals("specialisation2"));
-		assertTrue(rootNode1.get("type").asText().equals("type1"));
-		assertTrue(rootNode2.get("type").asText().equals("type2"));
+		assertTrue(rootNode1.get("type").asText().equals("Graduate Job"));
+		assertTrue(rootNode2.get("type") == null);
 		if (jwtToken.equals(adminJwtToken)) {
 			assertTrue(rootNode1.get("verified").asBoolean());
 		} else {

@@ -31,7 +31,7 @@ public class Job implements DatabaseEntity {
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
 	private Company company;
-	
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "ownerId")
 	private AppUser owner;
@@ -39,7 +39,7 @@ public class Job implements DatabaseEntity {
 	@ManyToMany(cascade = CascadeType.PERSIST)
 	@JoinTable(name = "job_technology", joinColumns = @JoinColumn(name = "jobId"), inverseJoinColumns = @JoinColumn(name = "techId"))
 	private Set<Technology> technologies = new HashSet<>();
-	
+
 	@ManyToMany
 	@JoinTable(name = "job_bookmarkHolders", joinColumns = @JoinColumn(name = "jobId"), inverseJoinColumns = @JoinColumn(name = "bookmarkHolderId"))
 	private Set<AppUser> bookmarkHolders = new HashSet<>();
@@ -55,7 +55,6 @@ public class Job implements DatabaseEntity {
 		this.title = title;
 		this.company = company;
 	}
-	
 
 	public void setId(Long id) {
 		this.id = id;
@@ -68,7 +67,6 @@ public class Job implements DatabaseEntity {
 	public AppUser getOwner() {
 		return owner;
 	}
-	
 
 	public boolean isVerified() {
 		return isVerified;
@@ -81,14 +79,14 @@ public class Job implements DatabaseEntity {
 	public Set<AppUser> getBookmarkHolders() {
 		return bookmarkHolders;
 	}
-	
+
 	public void addBookmarkHolder(AppUser bookmarkHolder) {
 		this.bookmarkHolders.add(bookmarkHolder);
 		if (!bookmarkHolder.getBookmarkedJobs().contains(this)) {
 			bookmarkHolder.addBookmarkedjob(this);
 		}
 	}
-	
+
 	public void removedBookmarkHolder(AppUser bookmarkHolder) {
 		if (this.bookmarkHolders.contains(bookmarkHolder))
 			this.bookmarkHolders.remove(bookmarkHolder);
@@ -152,7 +150,8 @@ public class Job implements DatabaseEntity {
 	}
 
 	public void setType(String type) {
-		this.type = type;
+		if (type.equals("graduate job") || type.equals("internship"))
+			this.type = type; // convert type to title case before the assignment
 	}
 
 	public String getDescription() {
