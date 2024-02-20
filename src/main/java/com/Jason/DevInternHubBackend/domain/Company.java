@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -20,7 +21,10 @@ public class Company implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	private String companyName, url;
+	@Column(unique = true)
+	private String companyName;
+	@Column(unique = true)
+	private String url;
 	@JsonIgnore
 	@OneToMany(cascade = CascadeType.ALL, mappedBy = "company")
 	private List<Job> jobs = new ArrayList<Job>();

@@ -2,6 +2,7 @@ package com.Jason.DevInternHubBackend.domain;
 
 import java.util.Objects;
 import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
@@ -22,11 +23,13 @@ public class Job implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
-	private String title, description, url, location, companyName;
+	@Column(nullable = false, unique = true)
+	private String url;
+	private String title, description,location;
 	private LocalDate openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
-	private boolean isVerified;
+	private Boolean isVerified;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "companyId")
@@ -56,23 +59,27 @@ public class Job implements DatabaseEntity {
 		this.company = company;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setTechnologies(Set<Technology> technologies) {
+		this.technologies = technologies;
 	}
 
-	public void setCompanyName(String companyName) {
-		this.companyName = companyName;
+	public void setBookmarkHolders(Set<AppUser> bookmarkHolders) {
+		this.bookmarkHolders = bookmarkHolders;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public AppUser getOwner() {
 		return owner;
 	}
 
-	public boolean isVerified() {
+	public Boolean isVerified() {
 		return isVerified;
 	}
 
-	public void setVerified(boolean isVerified) {
+	public void setVerified(Boolean isVerified) {
 		this.isVerified = isVerified;
 	}
 

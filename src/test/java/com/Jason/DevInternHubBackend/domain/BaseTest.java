@@ -50,8 +50,11 @@ public abstract class BaseTest {
 		meta = new Company("Meta", "www.meta.com");
 
 		backendJob = new Job("Backend Job");
+		backendJob.setUrl("www.foo.com");
 		frontendJob = new Job("Frontend Job");
+		frontendJob.setUrl("www.bar.com");
 		fullStackJob = new Job("Full Stack Job");
+		fullStackJob.setUrl("www.baz.com");
 
 		sam = new AppUser("Sam", "sampassword", "user");
 		jack = new AppUser("Jack", "jackpassword", "user");
@@ -60,14 +63,5 @@ public abstract class BaseTest {
 		java = new Technology("Java");
 		python = new Technology("Python");
 		spring = new Technology("Spring");
-	}
-
-	public static <T, ID> void showRepositoryDetails(CrudRepository<T, ID> crudRepository) {
-		System.out.println("----------------");
-		System.out.printf("Record Count: %d\n", crudRepository.count());
-		for (T record : crudRepository.findAll()) {
-			System.out.println(record.toString());
-		}
-		System.out.println("----------------");
 	}
 }

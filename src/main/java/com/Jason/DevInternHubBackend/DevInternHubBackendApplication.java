@@ -98,10 +98,10 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 		company1.addJob(job2);
 		company2.addJob(job3);
 
-		companyRepository.saveAll(Arrays.asList(company1, company2));
-		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), Role.ADMIN));
-		appUserRepository.save(new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), Role.USER));
-		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), Role.GUEST));
+//		companyRepository.saveAll(Arrays.asList(company1, company2));
+//		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), Role.ADMIN));
+//		appUserRepository.save(new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), Role.USER));
+//		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), Role.GUEST));
 	}
 
 }

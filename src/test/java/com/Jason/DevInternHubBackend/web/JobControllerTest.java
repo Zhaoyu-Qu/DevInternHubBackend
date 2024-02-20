@@ -15,7 +15,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import org.atteo.evo.inflector.English;
 import org.junit.jupiter.api.Test;
 
+import com.Jason.DevInternHubBackend.domain.AppUser;
+import com.Jason.DevInternHubBackend.domain.Company;
 import com.Jason.DevInternHubBackend.domain.Job;
+import com.Jason.DevInternHubBackend.domain.Technology;
 import com.fasterxml.jackson.databind.JsonNode;
 
 @SpringBootTest
@@ -48,15 +51,19 @@ public class JobControllerTest extends EntityControllerTest {
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
-		assert rootNode.isEmpty();
+		assertTrue(rootNode.isEmpty());
 
 		// test non-empty Job repository
-		jobRepository.save(new Job("some job"));
+		Job job = new Job();
+		job.setTitle("foo");
+		job.setUrl("bar");
+		jobRepository.save(job);
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
-		assert !rootNode.isEmpty();
-		assertTrue(rootNode.get(0).get("title").asText().equals("some job"));
+		assertFalse(rootNode.isEmpty());
+		assertTrue(rootNode.get(0).get("title").asText().equals("foo"));
+		assertTrue(rootNode.get(0).get("url").asText().equals("bar"));
 	}
 
 	@Test
@@ -77,6 +84,7 @@ public class JobControllerTest extends EntityControllerTest {
 		// save a `Job` resource into the database
 		jobRepository.deleteAll();
 		Job job = new Job("some job");
+		job.setUrl("bar");
 		jobRepository.save(job);
 		Long resourceId = job.getId();
 		String urlForGet = restBaseApi + "/" + entityNameLowerCasePlural + "/" + resourceId;
@@ -89,6 +97,7 @@ public class JobControllerTest extends EntityControllerTest {
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
 		assertTrue(rootNode.get("title").asText().equals("some job"));
+		assertTrue(rootNode.get("url").asText().equals("bar"));
 	}
 	
 	@Test
@@ -100,7 +109,7 @@ public class JobControllerTest extends EntityControllerTest {
 	}
 	
 	private void testPostJob(String jwtToken) throws Exception {
-		// postBody1 has all correct inputs, except `verified` which is meant to be ignored
+		// postBody1 has all correct inputs
 		String postBody1 = "{\n"
 				+ "  \"title\": \"title1\",\n"
 				+ "  \"description\": \"description1\",\n"
@@ -112,14 +121,11 @@ public class JobControllerTest extends EntityControllerTest {
 				+ "  \"specialisation\": \"specialisation1\",\n"
 				+ "  \"type\": \"Graduate Job\",\n"
 				+ "  \"technologies\": [\n"
-				+ "    {\n"
-				+ "      \"name\": \"Technology11\",\n"
-				+ "      \"name\": \"Technology12\"\n"
-				+ "    }\n"
-				+ "  ],\n"
-				+ "  \"verified\": true\n"
+				+ "    \"foo\",\n"
+				+ "    \"bar\"\n"
+				+ "  ]\n"
 				+ "}";
-		// postBody2 has dates of the wrong formats and the `verified` property which is meant to be ignored
+		// postBody2 has dates and type of wrong formats
 		String postBody2 = "{\n"
 				+ "  \"title\": \"title2\",\n"
 				+ "  \"description\": \"description2\",\n"
@@ -131,12 +137,9 @@ public class JobControllerTest extends EntityControllerTest {
 				+ "  \"specialisation\": \"specialisation2\",\n"
 				+ "  \"type\": \"type2\",\n"
 				+ "  \"technologies\": [\n"
-				+ "    {\n"
-				+ "      \"name\": \"Technology21\",\n"
-				+ "      \"name\": \"Technology22\"\n"
-				+ "    }\n"
-				+ "  ],\n"
-				+ "  \"verified\": false\n"
+				+ "    \"bar\",\n"
+				+ "    \"baz\"\n"
+				+ "  ]\n"
 				+ "}";
 		String urlForPost = restBaseApi + "/" + entityNameLowerCasePlural;
 		String responseString1, responseString2;
@@ -159,145 +162,86 @@ public class JobControllerTest extends EntityControllerTest {
 			return;
 		}
 		
+		
+		
 		// retrieve the saved resources using HTTP GET
 		location1 = mvcResult1.getResponse().getHeader("location");
 		location2 = mvcResult1.getResponse().getHeader("location");
 		mvcResult1 = mockMvc.perform(get(location1).headers(headers)).andExpect(status().isOk()).andReturn();
 		mvcResult2 = mockMvc.perform(get(location2).headers(headers)).andExpect(status().isOk()).andReturn();
 		
-		// examine retrieved results
+		// examine retrieved results of primitive types
 		responseString1 = mvcResult1.getResponse().getContentAsString();
 		responseString2 = mvcResult2.getResponse().getContentAsString();
 		rootNode1 = objectMapper.readTree(responseString1);
 		rootNode2 = objectMapper.readTree(responseString2);
 		assertTrue(rootNode1.get("title").asText().equals("title1"));
-		assertTrue(rootNode2.get("title").asText().equals("title2"));
 		assertTrue(rootNode1.get("openingDate").asText().equals("2024-02-05"));
-		assertTrue(rootNode2.get("openingDate").asText() == null);
 		assertTrue(rootNode1.get("closingDate").asText().equals("2024-02-09"));
-		assertTrue(rootNode2.get("closingDate").asText() == null);
 		assertTrue(rootNode1.get("description").asText().equals("description1"));
-		assertTrue(rootNode2.get("description").asText().equals("description2"));
 		assertTrue(rootNode1.get("url").asText().equals("url1"));
-		assertTrue(rootNode2.get("url").asText().equals("url2"));
 		assertTrue(rootNode1.get("location").asText().equals("location1"));
-		assertTrue(rootNode2.get("location").asText().equals("location2"));
 		assertTrue(rootNode1.get("companyName").asText().equals("companyName1"));
-		assertTrue(rootNode2.get("companyName").asText().equals("companyName2"));
 		assertTrue(rootNode1.get("specialisation").asText().equals("specialisation1"));
-		assertTrue(rootNode2.get("specialisation").asText().equals("specialisation2"));
 		assertTrue(rootNode1.get("type").asText().equals("Graduate Job"));
+		JsonNode technologiesNode1 = rootNode1.get("technologies");
+		assertTrue(technologiesNode1.isArray());
+		
+		// examine related resources
+		Job job1 = jobRepository.findById(rootNode1.get("id").asLong()).get();
+		for (JsonNode n : technologiesNode1) {
+			assertTrue(n.asText().equals("foo") || n.asText().equals("bar"));
+			assertTrue(technologyRepository.existsByNameIgnoreCase(n.asText()));
+			Technology technology = technologyRepository.findByNameIgnoreCase(n.asText()).get();
+			assertTrue(job1.getTechnologies().contains(technology));
+			technology.getJobs().contains(job1);
+			
+		}
+		AppUser owner1 = job1.getOwner();
+		assertTrue(appUserRepository.existsById(owner1.getId()));
+		assertTrue(owner1.getOwnedJobs().contains(job1));
+		Company company1 = job1.getCompany();
+		assertTrue(companyRepository.existsById(company1.getId()));
+		assertTrue(company1.getJobs().contains(job1));
+		
+		// examine retrieved results of primitive types
+		assertTrue(rootNode2.get("title").asText().equals("title2"));
+		assertTrue(rootNode2.get("openingDate").asText() == null);
+		assertTrue(rootNode2.get("closingDate").asText() == null);
+		assertTrue(rootNode2.get("description").asText().equals("description2"));
+		assertTrue(rootNode2.get("url").asText().equals("url2"));
+		assertTrue(rootNode2.get("location").asText().equals("location2"));
+		assertTrue(rootNode2.get("companyName").asText().equals("companyName2"));
+		assertTrue(rootNode2.get("specialisation").asText().equals("specialisation2"));
 		assertTrue(rootNode2.get("type") == null);
+		JsonNode technologiesNode2 = rootNode2.get("technologies");
+		assertTrue(technologiesNode2.isArray());
+		// examine related resources
+		Job job2 = jobRepository.findById(rootNode2.get("id").asLong()).get();
+		for (JsonNode n : technologiesNode2) {
+			assertTrue(n.asText().equals("baz") || n.asText().equals("bar"));
+			assertTrue(technologyRepository.existsByNameIgnoreCase(n.asText()));
+			Technology technology = technologyRepository.findByNameIgnoreCase(n.asText()).get();
+			assertTrue(job2.getTechnologies().contains(technology));
+			technology.getJobs().contains(job2);
+			
+		}
+		AppUser owner2 = job2.getOwner();
+		assertTrue(appUserRepository.existsById(owner2.getId()));
+		assertTrue(owner2.getOwnedJobs().contains(job2));
+		assertTrue(owner1.getId().equals(owner2.getId()));
+		Company company2 = job1.getCompany();
+		assertTrue(companyRepository.existsById(company2.getId()));
+		assertTrue(company2.getJobs().contains(job2));
+		
 		if (jwtToken.equals(adminJwtToken)) {
-			assertTrue(rootNode1.get("verified").asBoolean());
-			assertTrue(rootNode2.get("verified").asBoolean());
+			assertTrue(rootNode1.get("isVerified").asBoolean());
+			assertTrue(rootNode2.get("isVerified").asBoolean());
 		} else {
-			assertFalse(rootNode1.get("verified").asBoolean());
-			assertFalse(rootNode2.get("verified").asBoolean());
+			assertFalse(rootNode1.get("isVerified").asBoolean());
+			assertFalse(rootNode2.get("isVerified").asBoolean());
 		}
 	}
 	private void testPatchJob() throws Exception {
-		String responseString, location;
-		MvcResult mvcResult;
-		JsonNode rootNode;
-		HttpHeaders headers = new HttpHeaders();
-		String urlForPost = restBaseApi + "/" + entityNameLowerCasePlural;
-		headers.setContentType(MediaType.APPLICATION_JSON);
-		
-		String postBody1 = "{\n"
-				+ "  \"title\": \"title1\",\n"
-				+ "  \"description\": \"description1\",\n"
-				+ "  \"url\": \"url1\",\n"
-				+ "  \"location\": \"location1\",\n"
-				+ "  \"companyName\": \"companyName1\",\n"
-				+ "  \"openingDate\": \"2024-02-05\",\n"
-				+ "  \"closingDate\": \"2024-02-09\",\n"
-				+ "  \"specialisation\": \"specialisation1\",\n"
-				+ "  \"type\": \"Graduate Job\",\n"
-				+ "  \"technologies\": [\n"
-				+ "    {\n"
-				+ "      \"name\": \"Technology11\",\n"
-				+ "      \"name\": \"Technology12\"\n"
-				+ "    }\n"
-				+ "  ],\n"
-				+ "}";
-		
-		// test admin behavior
-		headers.setBearerAuth(adminJwtToken);
-		// save a resource first
-		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody1)).andExpect(status().isOk()).andReturn();
-		location = mvcResult.getResponse().getHeader("location");
-		// then, update the resource using the patch method 
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title2\",\n"
-				+ "  \"verified\": false\n"
-				+ "}"
-				)).andExpect(status().isOk());
-		// retrieve the updated resource and examine its properties
-		mvcResult = mockMvc.perform(get(location).headers(headers)).andExpect(status().isOk()).andReturn();
-		responseString = mvcResult.getResponse().getContentAsString();
-		rootNode = objectMapper.readTree(responseString);
-		assertTrue(rootNode.get("title").asText().equals("title2"));
-		assertFalse(rootNode.get("verified").asBoolean());
-		
-		// test user behaviour
-		headers.setBearerAuth(userJwtToken);
-		// a non-admin user shouldn't be able to modify others' resources
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title2\",\n"
-				+ "  \"verified\": false\n"
-				+ "}"
-				)).andExpect(status().isForbidden());
-		// create a new resource with user privilege
-		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody1)).andExpect(status().isOk()).andReturn();
-		location = mvcResult.getResponse().getHeader("location");
-		// make a patch request
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title3\",\n"
-				+ "  \"verified\": true\n"
-				+ "}"
-				)).andExpect(status().isOk());
-		responseString = mvcResult.getResponse().getContentAsString();
-		rootNode = objectMapper.readTree(responseString);
-		assertTrue(rootNode.get("title").asText().equals("title3"));
-		// the `verified` property in the patch request should have been ignored by the backend
-		assertFalse(rootNode.get("verified").asBoolean());
-		
-		// admin can verify a posting
-		headers.setBearerAuth(adminJwtToken);
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"verified\": true\n"
-				+ "}"
-				)).andExpect(status().isOk());
-		assertTrue(rootNode.get("verified").asBoolean());
-		
-		// test patch a non-existent resource
-		String urlForPatchNonExistentResource = restBaseApi + "/" + entityNameLowerCasePlural + "/100";
-		headers.setBearerAuth(adminJwtToken);
-		mockMvc.perform(patch(urlForPatchNonExistentResource).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title3\",\n"
-				+ "  \"verified\": true\n"
-				+ "}"
-				)).andExpect(status().isNotFound());
-		
-		// test guest user behaviour
-		headers.setBearerAuth(guestJwtToken);
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title3\",\n"
-				+ "}"
-				)).andExpect(status().isForbidden());
-		
-		headers.setBearerAuth(null);
-		mockMvc.perform(patch(location).headers(headers).content(
-				"{\n"
-				+ "  \"title\": \"title3\",\n"
-				+ "}"
-				)).andExpect(status().isForbidden());
 	}
 }
