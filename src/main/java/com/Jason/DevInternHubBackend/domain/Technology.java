@@ -17,8 +17,9 @@ import jakarta.persistence.ManyToMany;
 public class Technology implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(nullable = false, updatable = false, unique = true)
 	private Long id;
-	@Column(unique = true)
+	@Column(nullable = false, unique = true)
 	private String name;
 	@JsonIgnore
 	@ManyToMany(mappedBy = "technologies")
@@ -29,6 +30,14 @@ public class Technology implements DatabaseEntity {
 
 	public Technology(String technology) {
 		this.name = technology;
+	}
+
+	public Long getId() {
+		return id;
+	}
+
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getName() {
@@ -43,15 +52,8 @@ public class Technology implements DatabaseEntity {
 		return jobs;
 	}
 
-	public void addJob(Job job) {
-		if (!jobs.contains(job)) {
-			this.jobs.add(job);
-			job.addTechnology(this);
-		}
-	}
-
-	public Long getId() {
-		return id;
+	public void setJobs(Set<Job> jobs) {
+		this.jobs = jobs;
 	}
 
 	@Override
@@ -64,8 +66,8 @@ public class Technology implements DatabaseEntity {
 	}
 
 	@Override
-	public String toString() {
-		return String.format("ID: %d|Tech: %s|Job count: %d", this.getId(), this.getName(), this.jobs.size());
+	public int hashCode() {
+		return Objects.hash(name);
 	}
 
 	@Override

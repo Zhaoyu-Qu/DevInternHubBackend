@@ -22,10 +22,11 @@ import org.springframework.security.access.annotation.Secured;
 public class Job implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	@Column(nullable = false, updatable = false, unique = true)
 	private Long id;
 	@Column(nullable = false, unique = true)
 	private String url;
-	private String title, description,location;
+	private String title, description, location;
 	private LocalDate openingDate, closingDate;
 	private String specialisation; // backend, frontend, mobile development, etc.
 	private String type; // graduate jobs, internships, entry level jobs, etc.
@@ -59,65 +60,12 @@ public class Job implements DatabaseEntity {
 		this.company = company;
 	}
 
-	public void setTechnologies(Set<Technology> technologies) {
-		this.technologies = technologies;
-	}
-
-	public void setBookmarkHolders(Set<AppUser> bookmarkHolders) {
-		this.bookmarkHolders = bookmarkHolders;
+	public Long getId() {
+		return id;
 	}
 
 	public void setId(Long id) {
 		this.id = id;
-	}
-
-	public AppUser getOwner() {
-		return owner;
-	}
-
-	public Boolean isVerified() {
-		return isVerified;
-	}
-
-	public void setVerified(Boolean isVerified) {
-		this.isVerified = isVerified;
-	}
-
-	public Set<AppUser> getBookmarkHolders() {
-		return bookmarkHolders;
-	}
-
-	public void addBookmarkHolder(AppUser bookmarkHolder) {
-		this.bookmarkHolders.add(bookmarkHolder);
-		if (!bookmarkHolder.getBookmarkedJobs().contains(this)) {
-			bookmarkHolder.addBookmarkedjob(this);
-		}
-	}
-
-	public void removedBookmarkHolder(AppUser bookmarkHolder) {
-		if (this.bookmarkHolders.contains(bookmarkHolder))
-			this.bookmarkHolders.remove(bookmarkHolder);
-		if (bookmarkHolder.getBookmarkedJobs().contains(this))
-			bookmarkHolder.removeBookmarkedJob(this);
-	}
-
-	public void setOwner(AppUser owner) {
-		if (this.owner != null) {
-			this.owner.getOwnedJobs().remove(this);
-		}
-		this.owner = owner;
-		owner.addOwnedJob(this);
-	}
-
-	public void addTechnology(Technology technology) {
-		if (!this.technologies.contains(technology)) {
-			this.technologies.add(technology);
-			technology.addJob(this);
-		}
-	}
-
-	public Set<Technology> getTechnologies() {
-		return technologies;
 	}
 
 	public String getUrl() {
@@ -136,31 +84,6 @@ public class Job implements DatabaseEntity {
 		this.title = title;
 	}
 
-	public String getLocation() {
-		return location;
-	}
-
-	public void setLocation(String location) {
-		this.location = location;
-	}
-
-	public String getSpecialisation() {
-		return specialisation;
-	}
-
-	public void setSpecialisation(String specialisation) {
-		this.specialisation = specialisation;
-	}
-
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		if (type.equals("graduate job") || type.equals("internship"))
-			this.type = type; // convert type to title case before the assignment
-	}
-
 	public String getDescription() {
 		return description;
 	}
@@ -169,21 +92,12 @@ public class Job implements DatabaseEntity {
 		this.description = description;
 	}
 
-	public Company getCompany() {
-		return company;
+	public String getLocation() {
+		return location;
 	}
 
-	public void setCompany(Company company) {
-		if (this.company == null || !this.company.equals(company)) {
-			this.company = company;
-			company.addJob(this);
-		}
-	}
-
-	public String getCompanyName() {
-		if (getCompany() == null)
-			return null;
-		return getCompany().getCompanyName();
+	public void setLocation(String location) {
+		this.location = location;
 	}
 
 	public LocalDate getOpeningDate() {
@@ -202,33 +116,75 @@ public class Job implements DatabaseEntity {
 		this.closingDate = closingDate;
 	}
 
-	public Long getId() {
-		return id;
+	public String getSpecialisation() {
+		return specialisation;
+	}
+
+	public void setSpecialisation(String specialisation) {
+		this.specialisation = specialisation;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
+	}
+
+	public Boolean getIsVerified() {
+		return isVerified;
+	}
+
+	public void setIsVerified(Boolean isVerified) {
+		this.isVerified = isVerified;
+	}
+
+	public Company getCompany() {
+		return company;
+	}
+
+	public void setCompany(Company company) {
+		this.company = company;
+	}
+
+	public AppUser getOwner() {
+		return owner;
+	}
+
+	public void setOwner(AppUser owner) {
+		this.owner = owner;
+	}
+
+	public Set<Technology> getTechnologies() {
+		return technologies;
+	}
+
+	public void setTechnologies(Set<Technology> technologies) {
+		this.technologies = technologies;
+	}
+
+	public Set<AppUser> getBookmarkHolders() {
+		return bookmarkHolders;
+	}
+
+	public void setBookmarkHolders(Set<AppUser> bookmarkHolders) {
+		this.bookmarkHolders = bookmarkHolders;
 	}
 
 	@Override
 	public boolean equals(Object o) {
 		if (o instanceof Job) {
 			Job job = (Job) o;
-			return Objects.equals(this.getTitle(), job.getTitle())
-					&& Objects.equals(this.getDescription(), job.getDescription())
-					&& Objects.equals(this.getLocation(), job.getLocation())
-					&& Objects.equals(this.getSpecialisation(), job.getSpecialisation())
-					&& Objects.equals(this.getType(), job.getType()) && Objects.equals(this.getUrl(), job.getUrl())
-					&& Objects.equals(this.getClosingDate(), job.getClosingDate())
-					&& Objects.equals(this.getOpeningDate(), job.getOpeningDate())
-					&& Objects.equals(this.getTechnologies(), job.getTechnologies())
-					&& Objects.equals(this.getUrl(), job.getUrl())
-					&& Objects.equals(this.getCompanyName(), job.getCompanyName());
+			return Objects.equals(this.getUrl(), job.getUrl());
 		} else {
 			return false;
 		}
 	}
 
 	@Override
-	public String toString() {
-		return String.format("ID: %d|Title: %s|Company: %s", this.getId(), this.getTitle(),
-				this.getCompany().getCompanyName());
+	public int hashCode() {
+		return Objects.hash(url);
 	}
 
 	@Override

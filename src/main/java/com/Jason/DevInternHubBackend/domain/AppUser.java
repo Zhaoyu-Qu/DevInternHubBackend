@@ -1,14 +1,11 @@
 package com.Jason.DevInternHubBackend.domain;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -23,7 +20,7 @@ import jakarta.persistence.Enumerated;
 public class AppUser implements DatabaseEntity {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
-	@Column(nullable = false, updatable = false)
+	@Column(nullable = false, updatable = false, unique = true)
 	private Long id;
 
 	@Column(nullable = false, unique = true)
@@ -37,8 +34,8 @@ public class AppUser implements DatabaseEntity {
 	private Role role;
 
 	@JsonIgnore
-	@OneToMany(cascade = CascadeType.REMOVE, mappedBy = "owner")
-	private List<Job> ownedJobs = new ArrayList<Job>();
+	@OneToMany(mappedBy = "owner")
+	private Set<Job> ownedJobs = new HashSet<Job>();
 
 	@JsonIgnore
 	@ManyToMany(mappedBy = "bookmarkHolders")
@@ -57,41 +54,12 @@ public class AppUser implements DatabaseEntity {
 		this.setRole(role);
 	}
 
-	public AppUser(String username, String password, Role role) {
-		this(username, password);
-		this.setRole(role);
+	public Long getId() {
+		return id;
 	}
 
-	public Set<Job> getBookmarkedJobs() {
-		return bookmarkedJobs;
-	}
-
-	public void removeBookmarkedJob(Job job) {
-		if (this.bookmarkedJobs.contains(job))
-			this.bookmarkedJobs.remove(job);
-		if (job.getBookmarkHolders().contains(this))
-			job.removedBookmarkHolder(this);
-
-	}
-
-	public void addBookmarkedjob(Job job) {
-		this.bookmarkedJobs.add(job);
-		if (!job.getBookmarkHolders().contains(this)) {
-			job.addBookmarkHolder(this);
-		}
-	}
-
-	public List<Job> getOwnedJobs() {
-		return ownedJobs;
-	}
-
-	public void addOwnedJob(Job job) {
-		if (!this.ownedJobs.contains(job)) {
-			this.ownedJobs.add(job);
-		}
-		if (job.getOwner() == null || !job.getOwner().equals(this)) {
-			job.setOwner(this);
-		}
+	public void setId(Long id) {
+		this.id = id;
 	}
 
 	public String getUsername() {
@@ -111,19 +79,31 @@ public class AppUser implements DatabaseEntity {
 	}
 
 	public Role getRole() {
-		return this.role;
-	}
-
-	public void setRole(String role) {
-		this.role = Role.fromString(role);
+		return role;
 	}
 
 	public void setRole(Role role) {
 		this.role = role;
 	}
 
-	public Long getId() {
-		return id;
+	public void setRole(String role) {
+		this.role = Role.fromString(role);
+	}
+
+	public Set<Job> getOwnedJobs() {
+		return ownedJobs;
+	}
+
+	public void setOwnedJobs(Set<Job> ownedJobs) {
+		this.ownedJobs = ownedJobs;
+	}
+
+	public Set<Job> getBookmarkedJobs() {
+		return bookmarkedJobs;
+	}
+
+	public void setBookmarkedJobs(Set<Job> bookmarkedJobs) {
+		this.bookmarkedJobs = bookmarkedJobs;
 	}
 
 	@Override
@@ -136,9 +116,8 @@ public class AppUser implements DatabaseEntity {
 	}
 
 	@Override
-	public String toString() {
-		return String.format("ID: %d|Username: %s|Role: %s", this.getId(), this.getUsername(),
-				this.getRole().toString());
+	public int hashCode() {
+		return Objects.hash(username);
 	}
 
 	@Override

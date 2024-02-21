@@ -4,12 +4,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.repository.CrudRepository;
-
-import com.Jason.DevInternHubBackend.domain.Company;
 
 @SpringBootTest
 public class CompanyRepositoryTest extends BaseRepositoryTest<Company, Long> {
@@ -25,29 +22,29 @@ public class CompanyRepositoryTest extends BaseRepositoryTest<Company, Long> {
 
 	@Test
 	public void testFindByCompanyNameContainingIgnoreCase() {
-		companyRepository.save(microsoft);
-		companyRepository.save(google);
-		companyRepository.save(meta);
+		companyRepository.save(new Company("Microsoft"));
+		companyRepository.save(new Company("Google"));
+		companyRepository.save(new Company("Meta"));
 		assertTrue(companyRepository.findByCompanyNameContainingIgnoreCase("O").size() == 2);
 	}
-	
+
 	@Test
 	public void testFindByCompanyNameIgnoreCase() {
-		companyRepository.save(microsoft);
+		companyRepository.save(new Company("Microsoft"));
 		assertTrue(companyRepository.findByCompanyNameIgnoreCase("mIcrosoft").isPresent());
 	}
-	
+
 	@Test
-	public void testSaveIdempotency() {
+	public void testSaveDuplicate() {
 		companyRepository.save(new Company("foo", "url"));
 		assertThrows(DataIntegrityViolationException.class, () -> {
-            companyRepository.save(new Company("foo", "url")); // Attempt to save duplicate
-        });
+			companyRepository.save(new Company("foo", "url"));
+		});
 		assertThrows(DataIntegrityViolationException.class, () -> {
-            companyRepository.save(new Company("foo", "bar"));
-        });
+			companyRepository.save(new Company("foo", "bar"));
+		});
 		assertThrows(DataIntegrityViolationException.class, () -> {
-            companyRepository.save(new Company("bar", "url"));
-        });
+			companyRepository.save(new Company("bar", "url"));
+		});
 	}
 }

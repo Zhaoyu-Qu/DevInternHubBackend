@@ -20,6 +20,7 @@ public abstract class BaseRepositoryTest<T, ID> extends BaseTest {
 	@BeforeEach
 	public void setUpRepositoryAndSampleData() {
 		crudRepository = getRepository();
+		crudRepository.deleteAll();
 		sampleEntity1 = ((DatabaseEntity) createEntity()).generateFields();
 		sampleEntity2 = ((DatabaseEntity) createEntity()).generateFields();
 		sampleEntity3 = ((DatabaseEntity) createEntity()).generateFields();
