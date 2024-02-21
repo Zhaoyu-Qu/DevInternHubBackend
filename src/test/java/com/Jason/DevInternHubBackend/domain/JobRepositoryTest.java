@@ -1,8 +1,9 @@
 package com.Jason.DevInternHubBackend.domain;
 
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.repository.CrudRepository;
@@ -29,5 +30,14 @@ public class JobRepositoryTest extends BaseRepositoryTest<Job, Long> {
 		assertThrows(DataIntegrityViolationException.class, () -> {
 			jobRepository.save(j2);
 		});
+	}
+	
+	@Test
+	public void testFindByUrlIgnoreCase() {
+		Job job = new Job("foo");
+		job.setUrl("bar");
+		jobRepository.save(job);
+		assertTrue(jobRepository.findByUrlIgnoreCase("Bar").isPresent());
+
 	}
 }
