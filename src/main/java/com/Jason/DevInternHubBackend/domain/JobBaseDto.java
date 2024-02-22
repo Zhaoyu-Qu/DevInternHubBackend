@@ -1,13 +1,14 @@
 package com.Jason.DevInternHubBackend.domain;
 
+import java.util.HashSet;
 import java.util.Set;
 
 abstract class JobBaseDto {
-	protected String title, description, url, location, companyName;
-	protected String openingDate, closingDate;
-	protected String specialisation; // backend, frontend, mobile development, etc.
-	protected String type; // graduate jobs, internships, entry level jobs, etc.
-	protected Set<String> technologies;
+	public String title, description, url, location, companyName;
+	public String openingDate, closingDate;
+	public String specialisation; // backend, frontend, mobile development, etc.
+	public String type; // graduate jobs, internships, entry level jobs, etc.
+	public Set<String> technologies = new HashSet<>();
 
 	public String getTitle() {
 		return title;

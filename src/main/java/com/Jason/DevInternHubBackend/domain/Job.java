@@ -16,8 +16,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.security.access.annotation.Secured;
-
 @Entity
 public class Job implements DatabaseEntity {
 	@Id
@@ -128,8 +126,12 @@ public class Job implements DatabaseEntity {
 		return type;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public boolean setType(String type) {
+		if (Objects.equals(type, "Graduate Job") || Objects.equals(type, "Internship")) {
+			this.type = type;
+			return true;
+		} else
+			return false;
 	}
 
 	public Boolean getIsVerified() {

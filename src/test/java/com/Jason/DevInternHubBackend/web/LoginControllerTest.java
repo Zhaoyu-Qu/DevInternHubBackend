@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpHeaders;
@@ -15,6 +16,7 @@ import com.Jason.DevInternHubBackend.domain.AppUser;
 @SpringBootTest
 public class LoginControllerTest extends BaseControllerTest {
 	@Test
+	@DisplayName("test login")
 	public void testAuthentication() throws Exception {
 		appUserRepository.deleteAll();
 		appUserRepository
