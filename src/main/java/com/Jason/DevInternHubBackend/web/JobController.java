@@ -5,6 +5,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Objects;
@@ -68,7 +69,13 @@ public class JobController {
 		}
 		return jobDtos;
 	}
-
+	@ApiResponses(value = {
+		    @ApiResponse(responseCode = "200", description = "Job returned successfully", 
+		                 content = @Content(mediaType = "application/json", 
+		                 schema = @Schema(implementation = JobResponseDto.class))),
+		    @ApiResponse(responseCode = "404", description = "Job not found", 
+		                 content = @Content(mediaType = "application/json"))
+		})
 	@GetMapping("/jobs/{id}")
 	public ResponseEntity<JobResponseDto> getJob(@PathVariable("id") Long id) {
 		Optional<Job> jobOptional = jobRepository.findById(id);
@@ -148,8 +155,6 @@ public class JobController {
             content = @Content(mediaType = "application/json"))
 		})
 	public ResponseEntity<?> patchJob(@PathVariable("id") Long id, @RequestBody JobUpdateDto jobDto) {
-		if (jobRepository.findByUrlIgnoreCase(jobDto.getUrl()).isPresent())
-			return ResponseEntity.status(HttpStatus.CONFLICT).body("Failed to update posting. The url already exists.");
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		String username = authentication.getPrincipal().toString();
 		AppUser user = appUserRepository.findByUsernameIgnoreCase(username).get();
@@ -166,14 +171,104 @@ public class JobController {
 		}
 		
 		// return error code if url is not unique
-		if (jobDto.getUrl() != null && jobDto.getUrl().equals(job.getUrl()) && jobRepository.findByUrlIgnoreCase(jobDto.getUrl()).isPresent()) {
+		if (jobDto.getUrl() != null && !jobDto.getUrl().equals(job.getUrl()) && jobRepository.findByUrlIgnoreCase(jobDto.getUrl()).isPresent()) {
 			return ResponseEntity.status(HttpStatus.CONFLICT).body("Failed to update posting. The url is found in another posting.");
 		}
 		
 		// the following code update database record according to the patch request
-		
+		technologyRepository.saveAll(job.getTechnologies());
+		companyRepository.save(job.getCompany());
+		appUserRepository.save(job.getOwner());
+		appUserRepository.saveAll(job.getBookmarkHolders());
 		jobRepository.save(job);
-		appUserRepository.save(user);
+		
+		if (jobDto.getIsBookmarked() != null && jobDto.getIsBookmarked() == true) {
+			job.getBookmarkHolders().add(user);
+			user.getBookmarkedJobs().add(job);
+		} else if (jobDto.getIsBookmarked() != null && jobDto.getIsBookmarked() == false) {
+			job.getBookmarkHolders().remove(user);
+			user.getBookmarkedJobs().remove(job);
+		}
+		
+		if (jobDto.getIsVerified() != null && authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
+			job.setIsVerified(jobDto.getIsVerified());
+		}
+		
+		if (jobDto.getOpeningDate() != null) {
+			try {
+				LocalDate openingDate = LocalDate.parse(jobDto.getOpeningDate());
+				job.setOpeningDate(openingDate);
+			} catch (Exception e) { }
+		}
+		
+		if (jobDto.getClosingDate() != null) {
+			try {
+				LocalDate closingDate = LocalDate.parse(jobDto.getClosingDate());
+				job.setClosingDate(closingDate);
+			} catch (Exception e) { }
+		}
+		if (jobDto.getCompanyName() != null) {
+			// unhook current company
+			try {
+				job.getCompany().getJobs().remove(job);
+				job.setCompany(null);
+			} catch (Exception e) {}
+			
+			// link new company
+			String newCompanyName = jobDto.getCompanyName();
+			Optional<Company> companyOptional = companyRepository.findByCompanyNameIgnoreCase(newCompanyName);
+			if (companyOptional.isEmpty()) {
+				Company newCompany = new Company(jobDto.getCompanyName());
+				companyRepository.save(newCompany);
+				job.setCompany(newCompany);
+				job.getCompany().getJobs().add(job);
+			} else {
+				companyOptional.get().getJobs().add(job);
+				job.setCompany(companyOptional.get());
+			}
+		}
+		if (jobDto.getTechnologies().size() > 0) {
+			// clear the job's current technology records
+			for (Technology t : job.getTechnologies()) {
+				t.getJobs().remove(job);
+			}
+			job.getTechnologies().clear();
+			
+			for (String newTechName : jobDto.getTechnologies()) {
+				Technology newTechnology;
+				Optional<Technology> technologyOptional = technologyRepository.findByNameIgnoreCase(newTechName);
+				if (technologyOptional.isPresent()) {
+					newTechnology = technologyOptional.get();
+				} else {
+					newTechnology = new Technology(newTechName);
+				}
+				job.getTechnologies().add(newTechnology);
+				newTechnology.getJobs().add(job);
+			}
+		}
+		
+		if (jobDto.getDescription() != null)
+			job.setDescription(jobDto.getDescription());
+		if (jobDto.getLocation() != null)
+			job.setLocation(jobDto.getLocation());
+		if (jobDto.getSpecialisation() != null)
+			job.setSpecialisation(jobDto.getSpecialisation());
+		
+
+		
+		if (jobDto.getTitle() != null)
+			job.setTitle(jobDto.getTitle());
+		if (jobDto.getType() != null)
+			job.setType(jobDto.getType());
+		if (jobDto.getUrl() != null) {
+			job.setUrl(jobDto.getUrl());
+		}
+		
+		technologyRepository.saveAll(job.getTechnologies());
+		companyRepository.save(job.getCompany());
+		appUserRepository.save(job.getOwner());
+		appUserRepository.saveAll(job.getBookmarkHolders());
+		jobRepository.save(job);
 		return new ResponseEntity<>(convertToJobResponseDto(job), HttpStatus.OK);
 	}
 	

@@ -59,6 +59,26 @@ public class JobControllerTest extends EntityControllerTest {
 			+ "  ]\n"
 			+ "}";
 	
+	String patchBody =
+			"{\n"
+			+ "  \"title\": \"title3\",\n"
+			+ "  \"description\": \"description3\",\n"
+			+ "  \"url\": \"url3\",\n"
+			+ "  \"location\": \"location3\",\n"
+			+ "  \"companyName\": \"companyName3\",\n"
+			+ "  \"openingDate\": \"2024-04-07\",\n"
+			+ "  \"closingDate\": \"2024-05-17\",\n"
+			+ "  \"specialisation\": \"specialisation3\",\n"
+			+ "  \"type\": \"Internship\",\n"
+			+ "  \"technologies\": [\n"
+			+ "    \"foo\",\n"
+			+ "    \"baz\"\n"
+			+ "  ],\n"
+			+ "  \"isVerified\": true,\n"
+			+ "  \"isBookmarked\": true\n"
+			+ "}"
+			;
+	
 	@BeforeEach
 	public void setUpEnvironment() {
 		urlForPost = restBaseApi + "/" + entityNameLowerCasePlural;
@@ -75,19 +95,27 @@ public class JobControllerTest extends EntityControllerTest {
 	@Test
 	public void testGetAllJobs() throws Exception {
 		testGetAllJobs(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetAllJobs(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetAllJobs(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetAllJobs("");
 	}
 
 	public void testGetAllJobs(String jwtToken) throws Exception {
 		// setup
-		jobRepository.deleteAll();
 		String responseString;
 		MvcResult mvcResult;
 		JsonNode rootNode;
 		if (jwtToken.length() > 0)
 			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
 
 		// test empty Job Repository
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
@@ -112,19 +140,28 @@ public class JobControllerTest extends EntityControllerTest {
 	@Test
 	public void testGetJob() throws Exception {
 		testGetJob(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetJob(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetJob(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testGetJob("");
 	}
 
 	public void testGetJob(String jwtToken) throws Exception {
 		// setup
-		jobRepository.deleteAll();
 		String responseString;
 		MvcResult mvcResult;
 		JsonNode rootNode;
 		if (jwtToken.length() > 0)
 			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
+		
 
 		// save a `Job` resource into the database
 		Job job = new Job("some job");
@@ -137,29 +174,44 @@ public class JobControllerTest extends EntityControllerTest {
 		// get the resource
 		if (jwtToken.length() > 0)
 			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
 		mvcResult = mockMvc.perform(get(urlForGet).headers(headers)).andExpect(status().isOk()).andReturn();
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
 		assertTrue(rootNode.get("title").asText().equals("some job"));
 		assertTrue(rootNode.get("url").asText().equals("bar"));
+		
+		// attempt to get non-existent resource
+		String urlForGetNonExistentJob = restBaseApi + "/" + entityNameLowerCasePlural + "/" + 1000;
+		mvcResult = mockMvc.perform(get(urlForGetNonExistentJob).headers(headers)).andExpect(status().isNotFound()).andReturn();
 	}
 	
 	@Test
 	public void testPostJob() throws Exception {
 		testPostJob(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJob(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJob(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJob("");
 	}
 	
 	public void testPostJob(String jwtToken) throws Exception {
 		// setup
-		jobRepository.deleteAll();
 		String responseString, location;
 		MvcResult mvcResult;
 		JsonNode rootNode;
 		if (jwtToken.length() > 0)
 			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
 
 		// post a resource
 		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody)).andReturn();
@@ -167,8 +219,11 @@ public class JobControllerTest extends EntityControllerTest {
 		if (jwtToken.equals(adminJwtToken) || jwtToken.equals(userJwtToken)) {
 			assertTrue(statusCode == 201);
 			location = mvcResult.getResponse().getHeader("location");
-		} else {
+		} else if (jwtToken.equals(guestJwtToken)){
 			assertTrue(statusCode == 403);
+			return;
+		} else {
+			assertTrue(statusCode == 401);
 			return;
 		}
 
@@ -198,20 +253,27 @@ public class JobControllerTest extends EntityControllerTest {
 	
 	@Test
 	public void testPostJobWithInvalidInputs() throws Exception {
-		testPostJobWithInvalidInputs(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJobWithInvalidInputs(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJobWithInvalidInputs(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
 		testPostJobWithInvalidInputs("");
 	}
 
 	public void testPostJobWithInvalidInputs(String jwtToken) throws Exception {
 		// setup
-		jobRepository.deleteAll();
 		String responseString, location;
 		MvcResult mvcResult;
 		JsonNode rootNode;
 		if (jwtToken.length() > 0)
 			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
 		
 		// test wrong date format
 		String postBody = "{\n"
@@ -224,8 +286,11 @@ public class JobControllerTest extends EntityControllerTest {
 		if (jwtToken.equals(adminJwtToken) || jwtToken.equals(userJwtToken)) {
 			assertTrue(statusCode == 201);
 			location = mvcResult.getResponse().getHeader("location");
-		} else {
+		} else if (jwtToken.equals(guestJwtToken)){
 			assertTrue(statusCode == 403);
+			return;
+		} else {
+			assertTrue(statusCode == 401);
 			return;
 		}
 		// retrieve and examine resource
@@ -350,5 +415,109 @@ public class JobControllerTest extends EntityControllerTest {
 		assertTrue(technologyBar.getJobs().contains(job1));
 		assertTrue(technologyBaz.getJobs().size() == 1);
 		assertTrue(technologyBaz.getJobs().contains(job2));
+	}
+	
+	@Test
+	public void testPatchJob() throws Exception {
+		testPatchJob(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testPatchJob(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testPatchJob(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testPatchJob("");
+	}
+	
+	@Transactional
+	public void testPatchJob(String jwtToken) throws Exception {
+		// setup
+		String responseStringAdminResource, responseStringUserResource, adminResourceLocation, userResourceLocation;
+		MvcResult mvcResult;
+		headers.setBearerAuth(adminJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody)).andExpect(status().isCreated()).andReturn();
+		adminResourceLocation = mvcResult.getResponse().getHeader("location");
+		headers.setBearerAuth(userJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody.replace("1", "2"))).andExpect(status().isCreated()).andReturn();
+		userResourceLocation = mvcResult.getResponse().getHeader("location");
+		MvcResult mvcResultOnAdminResource, mvcResultOnUserResource;
+		JsonNode rootNodeAdminResource, rootNodeUserResource;
+		if (jwtToken.length() > 0)
+			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
+		// make patch request
+		mvcResultOnAdminResource = mockMvc.perform(patch(adminResourceLocation).headers(headers).content(patchBody)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(patch(userResourceLocation).headers(headers).content(patchBody.replace("3", "4"))).andReturn();
+		// examine status code based on authentication
+		if (jwtToken.equals(adminJwtToken)) {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 200);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 200);
+		} else if (jwtToken.equals(userJwtToken)) {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 403);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 200);
+		} else if (jwtToken.equals(guestJwtToken)){
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 403);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 403);
+			return;
+		} else {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 401);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 401);
+			return;
+		}
+		// examine new values via http get
+		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andExpect(status().isOk()).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andExpect(status().isOk()).andReturn();
+		responseStringAdminResource = mvcResultOnAdminResource.getResponse().getContentAsString();
+		responseStringUserResource = mvcResultOnUserResource.getResponse().getContentAsString();
+		rootNodeAdminResource = objectMapper.readTree(responseStringAdminResource);
+		rootNodeUserResource = objectMapper.readTree(responseStringUserResource);
+		
+		Long adminResourceId = rootNodeAdminResource.get("id").asLong();
+		Long userResourceId = rootNodeUserResource.get("id").asLong();
+		Job adminResource = jobRepository.findById(adminResourceId).get();
+		Job userResource = jobRepository.findById(userResourceId).get();
+		
+		if (jwtToken.equals(adminJwtToken)) {
+			rootNodeAdminResource.get("title").asText().equals("title3");
+			rootNodeAdminResource.get("description").asText().equals("description3");
+			rootNodeAdminResource.get("url").asText().equals("url3");
+			rootNodeAdminResource.get("location").asText().equals("location3");
+			rootNodeAdminResource.get("companyName").asText().equals("companyName3");
+			rootNodeAdminResource.get("openingDate").asText().equals("2024-04-07");
+			rootNodeAdminResource.get("closingDate").asText().equals("2024-05-17");
+			rootNodeAdminResource.get("specialisation").asText().equals("specialisation3");
+			rootNodeAdminResource.get("type").asText().equals("Internship");
+			
+			Set<String> technologies1 = new HashSet<>();
+			rootNodeAdminResource.get("technologies").forEach(node -> technologies1.add(node.asText()));
+			assertTrue(technologies1.containsAll(Arrays.asList("foo", "baz")));
+		
+			assertTrue(rootNodeAdminResource.get("isVerified").asBoolean());
+			assertTrue(rootNodeAdminResource.get("isBookmarked").asBoolean());
+		}
+		
+		rootNodeUserResource.get("title").asText().equals("title4");
+		rootNodeUserResource.get("description").asText().equals("description4");
+		rootNodeUserResource.get("url").asText().equals("url4");
+		rootNodeUserResource.get("location").asText().equals("location4");
+		rootNodeUserResource.get("companyName").asText().equals("companyName3");
+		rootNodeUserResource.get("openingDate").asText().equals("2024-04-07");
+		rootNodeUserResource.get("closingDate").asText().equals("2024-05-17");
+		rootNodeUserResource.get("specialisation").asText().equals("specialisation4");
+		rootNodeUserResource.get("type").asText().equals("Internship");
+		
+		Set<String> technologies1 = new HashSet<>();
+		rootNodeUserResource.get("technologies").forEach(node -> technologies1.add(node.asText()));
+		assertTrue(technologies1.containsAll(Arrays.asList("foo", "baz")));
+	
+		if (jwtToken.equals(adminJwtToken))
+			assertTrue(rootNodeUserResource.get("isVerified").asBoolean());
+		else
+			assertFalse(rootNodeUserResource.get("isVerified").asBoolean());
+		assertTrue(rootNodeUserResource.get("isBookmarked").asBoolean());
 	}
 }

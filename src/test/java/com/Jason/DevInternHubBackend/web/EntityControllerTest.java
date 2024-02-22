@@ -4,6 +4,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.Jason.DevInternHubBackend.domain.AppUser;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -31,10 +32,11 @@ public abstract class EntityControllerTest extends BaseControllerTest {
 	@BeforeEach
 	protected void entityControllerSetUp() throws Exception {
 		// clear all repositories
+		jobRepository.deleteAll();
 		companyRepository.deleteAll();
 		appUserRepository.deleteAll();
 		technologyRepository.deleteAll();
-		jobRepository.deleteAll();
+		
 		// add pre-defined users
 		appUserRepository
 				.save(new AppUser(demoAdminUsername, new BCryptPasswordEncoder().encode(demoAdminPassword), "admin"));
