@@ -52,6 +52,9 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 	@Override
 	// sample data for demonstration purposes only
 	public void run(String... args) throws Exception {
+		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), "admin"));
+		appUserRepository.save(new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), "user"));
+		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), "guest"));
 	}
 
 }
