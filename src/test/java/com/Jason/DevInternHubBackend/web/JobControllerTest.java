@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -586,8 +587,9 @@ public class JobControllerTest extends EntityControllerTest {
 		userResourceLocation = mvcResult.getResponse().getHeader("location");
 		userResourceBookmarkLocation = userResourceLocation + "/bookmark";
 		MvcResult mvcResultOnAdminResource, mvcResultOnUserResource;
-		headers.setBearerAuth(adminJwtToken);
+		
 		// admin make patch request to bookmark resources
+		headers.setBearerAuth(adminJwtToken);
 		mvcResultOnAdminResource = mockMvc.perform(patch(adminResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": true}")).andReturn();
 		mvcResultOnUserResource = mockMvc.perform(patch(userResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": true}")).andReturn();
 		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andReturn();
@@ -621,6 +623,66 @@ public class JobControllerTest extends EntityControllerTest {
 		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andReturn();
 		assertTrue(objectMapper.readTree(mvcResultOnAdminResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
 		assertFalse(objectMapper.readTree(mvcResultOnUserResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+	}
+	
+	@Test
+	public void testDeletePosting() throws Exception {
+		testDeletePosting(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testDeletePosting(userJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testDeletePosting(guestJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testDeletePosting("");
+	}
+	
+	public void testDeletePosting(String jwtToken) throws Exception {
+		// setup
+		String userResourceLocation, adminResourceLocation;
+		MvcResult mvcResult;
+		headers.setBearerAuth(adminJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody)).andExpect(status().isCreated()).andReturn();
+		adminResourceLocation = mvcResult.getResponse().getHeader("location");
+		
+		headers.setBearerAuth(userJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody.replace("1", "2"))).andExpect(status().isCreated()).andReturn();
+		userResourceLocation = mvcResult.getResponse().getHeader("location");
+		MvcResult mvcResultOnAdminResource, mvcResultOnUserResource;
+		
+		// make delete request
+		if (jwtToken.length() > 0)
+			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
+		mvcResultOnAdminResource = mockMvc.perform(delete(adminResourceLocation).headers(headers)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(delete(userResourceLocation).headers(headers)).andReturn();
+		
+		//  examine delete results 
+		if (jwtToken.equals(adminJwtToken)) {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 200);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 200);
+			mockMvc.perform(get(adminResourceLocation).headers(headers)).andExpect(status().isNotFound());
+			mockMvc.perform(get(userResourceLocation).headers(headers)).andExpect(status().isNotFound());
+		} else if (jwtToken.equals(userJwtToken)) {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 403);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 200);
+			mockMvc.perform(get(adminResourceLocation).headers(headers)).andExpect(status().isOk());
+			mockMvc.perform(get(userResourceLocation).headers(headers)).andExpect(status().isNotFound());
+		} else if (jwtToken.equals(guestJwtToken)) {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 403);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 403);
+			mockMvc.perform(get(adminResourceLocation).headers(headers)).andExpect(status().isOk());
+			mockMvc.perform(get(userResourceLocation).headers(headers)).andExpect(status().isOk());
+		} else {
+			assertTrue(mvcResultOnAdminResource.getResponse().getStatus() == 401);
+			assertTrue(mvcResultOnUserResource.getResponse().getStatus() == 401);
+			mockMvc.perform(get(adminResourceLocation).headers(headers)).andExpect(status().isOk());
+			mockMvc.perform(get(userResourceLocation).headers(headers)).andExpect(status().isOk());
+		}
 	}
 	
 }

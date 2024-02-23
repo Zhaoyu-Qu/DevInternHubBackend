@@ -17,6 +17,7 @@ import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -296,6 +297,49 @@ public class JobController {
 		}
 		
 		return new ResponseEntity<>(convertToJobResponseDto(job), HttpStatus.OK);
+		
+	}
+	
+	@DeleteMapping(path = "/jobs/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@Transactional
+	@ApiResponses(value = {
+		    @ApiResponse(responseCode = "200", description = "Job deleted successfully", 
+		                 content = @Content(mediaType = "application/json")),
+		    @ApiResponse(responseCode = "403", description = "non-admin user cannot update others' resources", 
+            content = @Content(mediaType = "application/json")),
+		    @ApiResponse(responseCode = "404", description = "resource not found", 
+            content = @Content(mediaType = "application/json"))
+		})
+	@Secured({ "ROLE_ADMIN", "ROLE_USER" })
+	public ResponseEntity<?> deleteJob(@PathVariable("id") Long id) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String username = authentication.getPrincipal().toString();
+		AppUser user = appUserRepository.findByUsernameIgnoreCase(username).get();
+		
+		Optional<Job> jobOptional = jobRepository.findById(id);
+		if (jobOptional.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Failed to add bookmark. Posting not found.");
+		}
+		Job job = jobOptional.get();
+		// return error code if non-admin users attempt to update resources that do not belong to them
+		if (!authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN")) && !user.equals(job.getOwner())) {
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Failed to update posting. Non-admin users only have access to their own resources.");
+		}
+		
+		companyRepository.save(job.getCompany());
+		technologyRepository.saveAll(job.getTechnologies());
+		jobRepository.save(job);
+		appUserRepository.save(user);
+		appUserRepository.saveAll(job.getBookmarkHolders());
+		// unlink all associated resources
+		for (AppUser bookmarkHolder : job.getBookmarkHolders())
+			bookmarkHolder.getBookmarkedJobs().remove(job);
+		job.getCompany().getJobs().remove(job);
+		job.getOwner().getOwnedJobs().remove(job);
+		for (Technology technology : job.getTechnologies())
+			technology.getJobs().remove(job);
+		jobRepository.delete(job);
+		return ResponseEntity.ok().build();
 		
 	}
 	
