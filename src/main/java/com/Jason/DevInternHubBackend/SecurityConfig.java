@@ -70,6 +70,8 @@ public class SecurityConfig {
 				.authorizeHttpRequests((authorizehttpRequests) -> authorizehttpRequests
 						.requestMatchers(HttpMethod.POST, "/login")
 						.permitAll() // allow unauthenticated access to the login end point
+						.requestMatchers(HttpMethod.POST, "/register")
+						.permitAll() // allow unauthenticated access to the login end point
 						.requestMatchers(HttpMethod.GET, "/**")
 						.permitAll()
 						.anyRequest()
