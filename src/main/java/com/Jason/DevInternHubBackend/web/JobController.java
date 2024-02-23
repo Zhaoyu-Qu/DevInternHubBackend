@@ -31,6 +31,7 @@ import com.Jason.DevInternHubBackend.domain.AppUserRepository;
 import com.Jason.DevInternHubBackend.domain.Company;
 import com.Jason.DevInternHubBackend.domain.CompanyRepository;
 import com.Jason.DevInternHubBackend.domain.Job;
+import com.Jason.DevInternHubBackend.domain.JobBookmarkDto;
 import com.Jason.DevInternHubBackend.domain.JobCreationDto;
 import com.Jason.DevInternHubBackend.domain.JobResponseDto;
 import com.Jason.DevInternHubBackend.domain.JobUpdateDto;
@@ -182,14 +183,6 @@ public class JobController {
 		appUserRepository.saveAll(job.getBookmarkHolders());
 		jobRepository.save(job);
 		
-		if (jobDto.getIsBookmarked() != null && jobDto.getIsBookmarked() == true) {
-			job.getBookmarkHolders().add(user);
-			user.getBookmarkedJobs().add(job);
-		} else if (jobDto.getIsBookmarked() != null && jobDto.getIsBookmarked() == false) {
-			job.getBookmarkHolders().remove(user);
-			user.getBookmarkedJobs().remove(job);
-		}
-		
 		if (jobDto.getIsVerified() != null && authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"))) {
 			job.setIsVerified(jobDto.getIsVerified());
 		}
@@ -270,6 +263,40 @@ public class JobController {
 		appUserRepository.saveAll(job.getBookmarkHolders());
 		jobRepository.save(job);
 		return new ResponseEntity<>(convertToJobResponseDto(job), HttpStatus.OK);
+	}
+	
+	@PatchMapping(path = "/jobs/{id}/bookmark", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@Transactional
+	@ApiResponses(value = {
+		    @ApiResponse(responseCode = "200", description = "Job updated successfully", 
+		                 content = @Content(mediaType = "application/json", 
+		                 schema = @Schema(implementation = JobResponseDto.class))),
+		    @ApiResponse(responseCode = "404", description = "resource not found", 
+            content = @Content(mediaType = "application/json"))
+		})
+	@Secured({ "ROLE_ADMIN", "ROLE_USER" })
+	public ResponseEntity<?> bookmarkJob(@PathVariable("id") Long id, @RequestBody JobBookmarkDto jobDto) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		String username = authentication.getPrincipal().toString();
+		AppUser user = appUserRepository.findByUsernameIgnoreCase(username).get();
+		
+		Optional<Job> jobOptional = jobRepository.findById(id);
+		if (jobOptional.isEmpty()) {
+			return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Failed to add bookmark. Posting not found.");
+		}
+		Job job = jobOptional.get();
+		jobRepository.save(job);
+		appUserRepository.save(user);
+		if (jobDto.getIsBookmarked() == true) {
+			job.getBookmarkHolders().add(user);
+			user.getBookmarkedJobs().add(job);
+		} else if (jobDto.getIsBookmarked() == false) {
+			job.getBookmarkHolders().remove(user);
+			user.getBookmarkedJobs().remove(job);
+		}
+		
+		return new ResponseEntity<>(convertToJobResponseDto(job), HttpStatus.OK);
+		
 	}
 	
 	private JobResponseDto convertToJobResponseDto(Job job) {

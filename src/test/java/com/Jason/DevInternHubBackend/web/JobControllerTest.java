@@ -74,8 +74,7 @@ public class JobControllerTest extends EntityControllerTest {
 			+ "    \"foo\",\n"
 			+ "    \"baz\"\n"
 			+ "  ],\n"
-			+ "  \"isVerified\": true,\n"
-			+ "  \"isBookmarked\": true\n"
+			+ "  \"isVerified\": true\n"
 			+ "}"
 			;
 	
@@ -429,6 +428,12 @@ public class JobControllerTest extends EntityControllerTest {
 		super.entityControllerSetUp();
 		this.setUpEnvironment();
 		testPatchJob("");
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testPatchJobWithInvalidInputs(adminJwtToken);
+		super.entityControllerSetUp();
+		this.setUpEnvironment();
+		testPatchJobWithInvalidInputs(userJwtToken);
 	}
 	
 	@Transactional
@@ -481,6 +486,7 @@ public class JobControllerTest extends EntityControllerTest {
 		Job adminResource = jobRepository.findById(adminResourceId).get();
 		Job userResource = jobRepository.findById(userResourceId).get();
 		
+		// admin can modify any resource
 		if (jwtToken.equals(adminJwtToken)) {
 			rootNodeAdminResource.get("title").asText().equals("title3");
 			rootNodeAdminResource.get("description").asText().equals("description3");
@@ -495,11 +501,29 @@ public class JobControllerTest extends EntityControllerTest {
 			Set<String> technologies1 = new HashSet<>();
 			rootNodeAdminResource.get("technologies").forEach(node -> technologies1.add(node.asText()));
 			assertTrue(technologies1.containsAll(Arrays.asList("foo", "baz")));
+			assertTrue(rootNodeAdminResource.get("isVerified").asBoolean());
+			assertFalse(rootNodeAdminResource.get("isBookmarked").asBoolean());
+		} else {
+			// non-admin users cannot touch others' resources, so everything should stay unchanged.
+			rootNodeAdminResource.get("title").asText().equals("title1");
+			rootNodeAdminResource.get("description").asText().equals("description1");
+			rootNodeAdminResource.get("url").asText().equals("url1");
+			rootNodeAdminResource.get("location").asText().equals("location1");
+			rootNodeAdminResource.get("companyName").asText().equals("companyName1");
+			rootNodeAdminResource.get("openingDate").asText().equals("2024-02-05");
+			rootNodeAdminResource.get("closingDate").asText().equals("2024-02-09");
+			rootNodeAdminResource.get("specialisation").asText().equals("specialisation1");
+			rootNodeAdminResource.get("type").asText().equals("Graduate Job");
+			
+			Set<String> technologies1 = new HashSet<>();
+			rootNodeAdminResource.get("technologies").forEach(node -> technologies1.add(node.asText()));
+			assertTrue(technologies1.containsAll(Arrays.asList("foo", "bar")));
 		
 			assertTrue(rootNodeAdminResource.get("isVerified").asBoolean());
-			assertTrue(rootNodeAdminResource.get("isBookmarked").asBoolean());
+			assertFalse(rootNodeAdminResource.get("isBookmarked").asBoolean());
 		}
 		
+		// the user can modify its own resource, and an admin can modify any resource
 		rootNodeUserResource.get("title").asText().equals("title4");
 		rootNodeUserResource.get("description").asText().equals("description4");
 		rootNodeUserResource.get("url").asText().equals("url4");
@@ -516,8 +540,87 @@ public class JobControllerTest extends EntityControllerTest {
 	
 		if (jwtToken.equals(adminJwtToken))
 			assertTrue(rootNodeUserResource.get("isVerified").asBoolean());
-		else
+		else {
 			assertFalse(rootNodeUserResource.get("isVerified").asBoolean());
-		assertTrue(rootNodeUserResource.get("isBookmarked").asBoolean());
+			assertFalse(rootNodeUserResource.get("isBookmarked").asBoolean());
+		}
 	}
+	
+	public void testPatchJobWithInvalidInputs(String jwtToken) throws Exception {
+		// setup
+		String responseStringAdminResource, responseStringUserResource, adminResourceLocation, userResourceLocation;
+		MvcResult mvcResult;
+		headers.setBearerAuth(adminJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody)).andExpect(status().isCreated()).andReturn();
+		adminResourceLocation = mvcResult.getResponse().getHeader("location");
+		headers.setBearerAuth(userJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody.replace("1", "2"))).andExpect(status().isCreated()).andReturn();
+		userResourceLocation = mvcResult.getResponse().getHeader("location");
+		MvcResult mvcResultOnAdminResource, mvcResultOnUserResource;
+		JsonNode rootNodeAdminResource, rootNodeUserResource;
+		// try invalid input
+		if (jwtToken.length() > 0)
+			headers.setBearerAuth(jwtToken);
+		else {
+			headers.remove("Authorization");
+		}
+		mvcResultOnUserResource = mockMvc.perform(patch(userResourceLocation).headers(headers).content("{\"type\": \"foo_bar\"}")).andReturn();
+		responseStringUserResource = mvcResultOnUserResource.getResponse().getContentAsString();
+		rootNodeUserResource = objectMapper.readTree(responseStringUserResource);
+		assertTrue(rootNodeUserResource.get("type").asText().equals("Graduate Job"));
+	}
+	
+	@Test
+	public void testBookmarkPosting() throws Exception {
+		// setup
+		String userResourceLocation, adminResourceLocation;
+		String adminResourceBookmarkLocation, userResourceBookmarkLocation;
+		MvcResult mvcResult;
+		headers.setBearerAuth(adminJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody)).andExpect(status().isCreated()).andReturn();
+		adminResourceLocation = mvcResult.getResponse().getHeader("location");
+		adminResourceBookmarkLocation = adminResourceLocation + "/bookmark";
+		
+		headers.setBearerAuth(userJwtToken);
+		mvcResult = mockMvc.perform(post(urlForPost).headers(headers).content(postBody.replace("1", "2"))).andExpect(status().isCreated()).andReturn();
+		userResourceLocation = mvcResult.getResponse().getHeader("location");
+		userResourceBookmarkLocation = userResourceLocation + "/bookmark";
+		MvcResult mvcResultOnAdminResource, mvcResultOnUserResource;
+		headers.setBearerAuth(adminJwtToken);
+		// admin make patch request to bookmark resources
+		mvcResultOnAdminResource = mockMvc.perform(patch(adminResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": true}")).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(patch(userResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": true}")).andReturn();
+		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andReturn();
+		// to the admin, the resources are bookmarked
+		assertTrue(objectMapper.readTree(mvcResultOnAdminResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		assertTrue(objectMapper.readTree(mvcResultOnUserResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		// to other users, the resources remain unbookmarked
+		headers.setBearerAuth(userJwtToken);
+		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andReturn();
+		assertFalse(objectMapper.readTree(mvcResultOnAdminResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		assertFalse(objectMapper.readTree(mvcResultOnUserResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		
+		// admin unbookmarks user resource, user bookmarks admin resource
+		headers.setBearerAuth(adminJwtToken);
+		mvcResultOnUserResource = mockMvc.perform(patch(userResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": false}")).andReturn();
+		headers.setBearerAuth(userJwtToken);
+		mvcResultOnAdminResource = mockMvc.perform(patch(adminResourceBookmarkLocation).headers(headers).content("{\"isBookmarked\": true}")).andReturn();
+		
+		// retrieve resource as admin
+		headers.setBearerAuth(adminJwtToken);
+		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andReturn();
+		assertTrue(objectMapper.readTree(mvcResultOnAdminResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		assertFalse(objectMapper.readTree(mvcResultOnUserResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		
+		// retrieve resource as user
+		headers.setBearerAuth(userJwtToken);
+		mvcResultOnAdminResource = mockMvc.perform(get(adminResourceLocation).headers(headers)).andReturn();
+		mvcResultOnUserResource = mockMvc.perform(get(userResourceLocation).headers(headers)).andReturn();
+		assertTrue(objectMapper.readTree(mvcResultOnAdminResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+		assertFalse(objectMapper.readTree(mvcResultOnUserResource.getResponse().getContentAsString()).get("isBookmarked").asBoolean());
+	}
+	
 }
