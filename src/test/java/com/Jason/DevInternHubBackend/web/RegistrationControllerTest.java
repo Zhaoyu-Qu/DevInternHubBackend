@@ -21,6 +21,7 @@ public class RegistrationControllerTest extends BaseControllerTest {
 	public void setUpEnvironment() {
 		headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
+		jobRepository.deleteAll();
 		appUserRepository.deleteAll();
 	}
 

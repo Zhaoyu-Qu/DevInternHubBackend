@@ -18,6 +18,7 @@ public class LoginControllerTest extends BaseControllerTest {
 	@Test
 	@DisplayName("test login")
 	public void testAuthentication() throws Exception {
+		jobRepository.deleteAll();
 		appUserRepository.deleteAll();
 		appUserRepository
 				.save(new AppUser(demoAdminUsername, new BCryptPasswordEncoder().encode(demoAdminPassword), "admin"));

@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,8 +28,9 @@ public class LoginController {
 		UsernamePasswordAuthenticationToken creds = new UsernamePasswordAuthenticationToken(credentials.username(),
 				credentials.password());
 		Authentication auth = authenticationManager.authenticate(creds);
+		String role = auth.getAuthorities().stream().findFirst().map(GrantedAuthority::getAuthority).orElse("GUEST");
 		// Generate token
-		String jwts = jwtService.getToken(auth.getName());
+		String jwts = jwtService.getToken(auth.getName(), role);
 		// Build response with the generated token
 		return ResponseEntity.ok().header(HttpHeaders.AUTHORIZATION, "Bearer" + jwts)
 				.header(HttpHeaders.ACCESS_CONTROL_EXPOSE_HEADERS, "Authorization").build();

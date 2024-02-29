@@ -12,10 +12,10 @@ public class JobTest extends BaseTest {
 
 	@BeforeEach
 	protected void setUp() throws Exception {
-		companyRepository.deleteAll();
-		appUserRepository.deleteAll();
-		technologyRepository.deleteAll();
 		jobRepository.deleteAll();
+		companyRepository.deleteAll();
+		technologyRepository.deleteAll();
+		appUserRepository.deleteAll();
 		backendJob = new Job("Backend Job");
 		backendJob.setUrl("www.foo.com");
 	}
