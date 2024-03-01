@@ -111,6 +111,16 @@ public class JobControllerTest extends EntityControllerTest {
 
 		// test empty Job Repository
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
+		// test X-User-Role header
+		String role;
+		if (jwtToken.equals(adminJwtToken))
+			role = "ROLE_ADMIN";
+		else if (jwtToken.equals(userJwtToken))
+			role = "ROLE_USER";
+		else
+			role = "ROLE_GUEST";
+		assertTrue(mvcResult.getResponse().getHeader("X-User-Role").equals(role));
+		// continue testing empty Job Repository
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
 		assertTrue(rootNode.isEmpty());

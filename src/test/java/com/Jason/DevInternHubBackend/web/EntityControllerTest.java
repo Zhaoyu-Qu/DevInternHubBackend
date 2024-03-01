@@ -53,8 +53,8 @@ public abstract class EntityControllerTest extends BaseControllerTest {
 								.header(HttpHeaders.CONTENT_TYPE, "application/json"))
 				.andExpect(status().isOk()).andReturn();
 		adminJwtToken = mvcResult.getResponse().getHeader(HttpHeaders.AUTHORIZATION);
-		if (adminJwtToken != null && adminJwtToken.startsWith("Bearer")) {
-			adminJwtToken = adminJwtToken.substring(6);
+		if (adminJwtToken != null && adminJwtToken.startsWith("Bearer ")) {
+			adminJwtToken = adminJwtToken.substring(7);
 		} else {
 			throw new Exception(String.format("retrieved adminJwtToken: %s is not valid.", adminJwtToken));
 		}
@@ -68,8 +68,8 @@ public abstract class EntityControllerTest extends BaseControllerTest {
 								.header(HttpHeaders.CONTENT_TYPE, "application/json"))
 				.andExpect(status().isOk()).andReturn();
 		userJwtToken = mvcResult.getResponse().getHeader(HttpHeaders.AUTHORIZATION);
-		if (userJwtToken != null && userJwtToken.startsWith("Bearer")) {
-			userJwtToken = userJwtToken.substring(6);
+		if (userJwtToken != null && userJwtToken.startsWith("Bearer ")) {
+			userJwtToken = userJwtToken.substring(7);
 		} else {
 			throw new Exception(String.format("retrieved userJwtToken: %s is not valid.", userJwtToken));
 		}
@@ -83,8 +83,8 @@ public abstract class EntityControllerTest extends BaseControllerTest {
 								.header(HttpHeaders.CONTENT_TYPE, "application/json"))
 				.andExpect(status().isOk()).andReturn();
 		guestJwtToken = mvcResult.getResponse().getHeader(HttpHeaders.AUTHORIZATION);
-		if (guestJwtToken != null && guestJwtToken.startsWith("Bearer")) {
-			guestJwtToken = guestJwtToken.substring(6);
+		if (guestJwtToken != null && guestJwtToken.startsWith("Bearer ")) {
+			guestJwtToken = guestJwtToken.substring(7);
 		} else {
 			throw new Exception(String.format("retrieved guestJwtToken: %s is not valid.", guestJwtToken));
 		}

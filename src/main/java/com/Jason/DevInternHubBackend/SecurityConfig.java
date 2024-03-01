@@ -33,13 +33,16 @@ public class SecurityConfig {
 	private final UserDetailsServiceImpl userDetailsService;
 	private final AuthenticationFilter authenticationFilter;
 	private final AuthEntryPoint authEntryPoint;
+	private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
 
 	public SecurityConfig(UserDetailsServiceImpl userDetailsService, AuthenticationFilter authenticationFilter,
-			AuthEntryPoint authEntryPoint) {
+			AuthEntryPoint authEntryPoint, JwtAuthenticationFilter jwtAuthenticationFilter) {
 		super();
 		this.userDetailsService = userDetailsService;
 		this.authenticationFilter = authenticationFilter;
 		this.authEntryPoint = authEntryPoint;
+		this.jwtAuthenticationFilter = jwtAuthenticationFilter;
 	}
 
 	// Even if the `configureGlobal` method is removed, the application may still function normally.
@@ -76,6 +79,7 @@ public class SecurityConfig {
 						.permitAll()
 						.anyRequest()
 						.authenticated())
+				.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
 				.exceptionHandling((exceptionHandling) -> exceptionHandling.authenticationEntryPoint(authEntryPoint));
 		return http.build();
