@@ -300,7 +300,7 @@ public class JobController {
 		
 	}
 	
-	@DeleteMapping(path = "/jobs/{id}", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+	@DeleteMapping(path = "/jobs/{id}")
 	@Transactional
 	@ApiResponses(value = {
 		    @ApiResponse(responseCode = "200", description = "Job deleted successfully", 
@@ -373,6 +373,10 @@ public class JobController {
 		j.setTitle(job.getTitle());
 		j.setUrl(job.getUrl());
 		j.setType(job.getType());
+		if (user != null && user.getUsername().equals(job.getOwner().getUsername()))
+			j.setIsOwned(true);
+		else
+			j.setIsOwned(false);
 		return j;
 	}
 	

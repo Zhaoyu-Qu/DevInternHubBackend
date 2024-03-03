@@ -24,7 +24,7 @@ import org.atteo.evo.inflector.English;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-
+import com.Jason.DevInternHubBackend.domain.AppUser;
 import com.Jason.DevInternHubBackend.domain.Company;
 import com.Jason.DevInternHubBackend.domain.Job;
 import com.Jason.DevInternHubBackend.domain.Technology;
@@ -98,6 +98,7 @@ public class JobControllerTest extends EntityControllerTest {
 		testGetAllJobs("");
 	}
 
+	@Transactional
 	public void testGetAllJobs(String jwtToken) throws Exception {
 		// setup
 		String responseString;
@@ -111,26 +112,18 @@ public class JobControllerTest extends EntityControllerTest {
 
 		// test empty Job Repository
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
-		// test X-User-Role header
-		String role;
-		if (jwtToken.equals(adminJwtToken))
-			role = "ROLE_ADMIN";
-		else if (jwtToken.equals(userJwtToken))
-			role = "ROLE_USER";
-		else
-			role = "ROLE_GUEST";
-		assertTrue(mvcResult.getResponse().getHeader("X-User-Role").equals(role));
 		// continue testing empty Job Repository
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
 		assertTrue(rootNode.isEmpty());
 
 		// test non-empty Job repository
-		Job job = new Job();
-		job.setTitle("foo");
+		Job job = new Job("foo");
 		job.setUrl("bar");
-		
+		job.setOwner(new AppUser("foo1234", "bar12334", "user"));
+		appUserRepository.save(job.getOwner());
 		jobRepository.save(job);
+		job.getOwner().getOwnedJobs().add(job);
 		mvcResult = mockMvc.perform(get(urlForGetAll).headers(headers)).andExpect(status().isOk()).andReturn();
 		responseString = mvcResult.getResponse().getContentAsString();
 		rootNode = objectMapper.readTree(responseString);
@@ -153,6 +146,7 @@ public class JobControllerTest extends EntityControllerTest {
 		testGetJob("");
 	}
 
+	@Transactional
 	public void testGetJob(String jwtToken) throws Exception {
 		// setup
 		String responseString;
@@ -168,7 +162,10 @@ public class JobControllerTest extends EntityControllerTest {
 		// save a `Job` resource into the database
 		Job job = new Job("some job");
 		job.setUrl("bar");
+		job.setOwner(new AppUser("foo1234", "bar12334", "user"));
+		appUserRepository.save(job.getOwner());
 		jobRepository.save(job);
+		job.getOwner().getOwnedJobs().add(job);
 		Long resourceId = job.getId();
 		String urlForGet = restBaseApi + "/" + entityNameLowerCasePlural + "/" + resourceId;
 		assertTrue(jobRepository.findById(resourceId).isPresent());

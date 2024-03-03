@@ -4,6 +4,7 @@ public class JobResponseDto extends JobBaseDto {
 	private Long id;
 	private Boolean isVerified;
 	private Boolean isBookmarked;
+	private Boolean isOwned;
 	private String companyUrl;
 
 	public Long getId() {
@@ -37,4 +38,13 @@ public class JobResponseDto extends JobBaseDto {
 	public void setCompanyUrl(String companyUrl) {
 		this.companyUrl = companyUrl;
 	}
+
+	public Boolean getIsOwned() {
+		return isOwned;
+	}
+
+	public void setIsOwned(Boolean isOwned) {
+		this.isOwned = isOwned;
+	}
+	
 }

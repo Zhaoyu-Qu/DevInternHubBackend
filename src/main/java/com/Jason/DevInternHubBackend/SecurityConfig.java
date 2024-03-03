@@ -95,6 +95,7 @@ public class SecurityConfig {
 		config.setAllowedHeaders(Arrays.asList("*"));
 		config.setAllowCredentials(false);
 		config.applyPermitDefaultValues();
+//		config.addExposedHeader("X-User-Role");
 		source.registerCorsConfiguration("/**", config);
 		return source;
 	}

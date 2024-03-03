@@ -30,6 +30,7 @@ public abstract class EntityControllerTest extends BaseControllerTest {
 	abstract void setEntityNameLowerCasePlural();
 
 	@BeforeEach
+	@Transactional
 	protected void entityControllerSetUp() throws Exception {
 		// clear all repositories
 		jobRepository.deleteAll();

@@ -59,21 +59,24 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 	@Transactional
 	// sample data for demonstration purposes only
 	public void run(String... args) throws Exception {
-//		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), "admin"));
-//		appUserRepository.save(new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), "user"));
-//		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), "guest"));
-//		Job job1 = new Job("job1");
-//		job1.setUrl("url1");
-//		job1.setClosingDate(LocalDate.parse("2024-04-07"));
-//		job1.setOpeningDate(LocalDate.parse("2024-07-07"));
-//		job1.setDescription("demo job");
-//		job1.setType("Graduate Job");
-//		job1.setCompany(new Company("company1"));
-//		job1.getTechnologies().add(new Technology("tech1"));
-//		job1.getTechnologies().add(new Technology("tech2"));
-//		technologyRepository.saveAll(job1.getTechnologies());
-//		companyRepository.save(job1.getCompany());
-//		jobRepository.save(job1);
+		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), "admin"));
+		AppUser user = new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), "user");
+		appUserRepository.save(user);
+		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), "guest"));
+		Job job1 = new Job("job1");
+		job1.setUrl("url1");
+		job1.setClosingDate(LocalDate.parse("2024-04-07"));
+		job1.setOpeningDate(LocalDate.parse("2024-07-07"));
+		job1.setDescription("demo job");
+		job1.setType("Graduate Job");
+		job1.setCompany(new Company("company1"));
+		job1.getTechnologies().add(new Technology("tech1"));
+		job1.getTechnologies().add(new Technology("tech2"));
+		job1.setOwner(user);
+		user.getOwnedJobs().add(job1);
+		technologyRepository.saveAll(job1.getTechnologies());
+		companyRepository.save(job1.getCompany());
+		jobRepository.save(job1);
 	}
 
 }
