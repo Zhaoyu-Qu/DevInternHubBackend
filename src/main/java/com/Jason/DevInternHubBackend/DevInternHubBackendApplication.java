@@ -59,7 +59,7 @@ public class DevInternHubBackendApplication implements CommandLineRunner {
 	@Transactional
 	// sample data for demonstration purposes only
 	public void run(String... args) throws Exception {
-//		appUserRepository.save(new AppUser(demoAdminUsername, passwordEncoder.encode(demoAdminPassword), "admin"));
+//		appUserRepository.save(new AppUser("abcd177674", passwordEncoder.encode("abcd177674"), "admin"));
 //		AppUser user = new AppUser(demoUserUsername, passwordEncoder.encode(demoUserPassword), "user");
 //		appUserRepository.save(user);
 //		appUserRepository.save(new AppUser(demoGuestUsername, passwordEncoder.encode(demoGuestPassword), "guest"));
