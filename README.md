@@ -1,6 +1,6 @@
 ## Overview
-This repository stores the source code of the Spring Boot backend of website `www.DevInternHub.space`.
-The API document for the website's backend server is available at http://www.devinternhub.space:8080/swagger-ui/index.html.
+This repository contains the source code for the Spring Boot backend of the website www.DevInternHub.space. 
+The API documentation for the backend server is available at: http://www.devinternhub.space:8080/swagger-ui/index.html
 
 ## QuickStart
 To run the application, first set up a MariaDB server.
@@ -17,4 +17,4 @@ On macOS, execute the following commands to set up and run a MariaDB server loca
 Then, import the Gradle project in `Eclipse IDE for Enterprise Java and Web Developers (eclipse-jee-2025-03-R-macosx-cocoa-aarch64.dmg)` and run the Java application.
 
 Once running, the application listens on port 8080 and exposes a set of rest APIs.
-The API document is available at http://localhost:8080/swagger-ui/index.html
+The API document is available at `http://localhost:8080/swagger-ui/index.html`
