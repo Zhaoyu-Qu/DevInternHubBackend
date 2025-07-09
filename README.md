@@ -1,5 +1,5 @@
 ## Overview
-This repository stores the source of the Spring Boot backend of website `www.DevInternHub.space`.
+This repository stores the source code of the Spring Boot backend of website `www.DevInternHub.space`.
 The API document for the website's backend server is available at http://www.devinternhub.space:8080/swagger-ui/index.html.
 
 ## QuickStart
